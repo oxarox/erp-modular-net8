@@ -1,0 +1,19 @@
+# Normaliza los finales de línea en el repositorio: LF siempre.
+# Sin esto, un equipo mezclado Windows/Linux genera diffs completos por archivo
+# cada vez que alguien guarda.
+* text=auto eol=lf
+
+*.sln        text eol=crlf
+*.csproj     text eol=lf
+*.cs         text eol=lf diff=csharp
+*.sql        text eol=lf
+*.md         text eol=lf
+*.yml        text eol=lf
+*.json       text eol=lf
+
+Dockerfile   text eol=lf
+*.sh         text eol=lf
+
+*.png binary
+*.jpg binary
+*.pfx binary
