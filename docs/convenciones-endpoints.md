@@ -73,8 +73,10 @@ como el mapa de casos de uso, que es exactamente lo que el equipo necesita consu
 **No se usa `DELETE`.** El sistema hace baja lógica
 ([ADR-0007](decisiones/ADR-0007-baja-logica.md)), así que el verbo sería una mentira.
 
-Códigos transversales: 401 sin token válido, 403 con token pero sin permiso, 500 solo para
-fallos no previstos.
+Códigos transversales: 401 sin token válido, 403 con token pero sin permiso, **503 cuando la
+base de datos u otra dependencia no responde** y 500 solo para fallos no previstos del propio
+sistema. Separar el 503 del 500 no es cosmética: le dice a quien opera dónde mirar, y al cliente
+que reintentar tiene sentido.
 
 ## Paginación
 
@@ -121,7 +123,7 @@ Una sola forma, siempre, incluidos el 401 y el 403:
 | Campo | Para qué |
 |---|---|
 | `traceId` | Llave para encontrar el request en los logs. Viaja también en la cabecera `X-Correlacion-Id` |
-| `code` | Familia del error: `validation_error`, `unauthorized`, `forbidden`, `bad_request`, `not_found`, `conflict`, `internal_error` |
+| `code` | Familia del error: `validation_error`, `unauthorized`, `forbidden`, `bad_request`, `not_found`, `conflict`, `service_unavailable`, `internal_error` |
 | `message` | Texto en español, apto para mostrar. Puede reformularse sin romper el contrato |
 | `details` | Datos estructurados. Nunca trazas, SQL ni datos de terceros |
 | `errorCode` | Código del catálogo. **Contrato duro: nunca viaja null** |

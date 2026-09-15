@@ -24,6 +24,11 @@ Decisión de fondo: [ADR-0004](decisiones/ADR-0004-codigos-de-error.md).
 | `API_006` | El cuerpo contiene campos inválidos | 400 |
 | `API_007` | Parámetro de consulta inválido | 400 |
 | `API_008` | Conflicto con el estado actual del recurso | 409 |
+| `API_009` | La base de datos u otra dependencia no responde | 503 |
+
+> `API_009` existe para separar **"hay un bug"** de **"hay una dependencia caída"**. Con un 500
+> genérico para ambos, quien está de turno no sabe si buscar en el código o levantar la base; y
+> el cliente no sabe si reintentar tiene sentido. Con 503 lo sabe: sí lo tiene.
 
 ## VAL — validación genérica de entrada
 

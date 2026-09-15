@@ -101,13 +101,24 @@ curl http://localhost:5080/api/salud
 
 > `{"estado":"ok","version":"1.0.0.0","entorno":"Development","fechaUtc":"..."}`
 
-Si responde un 500 al iniciar sesión con un error de conexión a SQL Server, LocalDB se detuvo:
-vuelva a `sqllocaldb start MSSQLLocalDB`. Si el arranque de LocalDB falla con *"SQL Server
-process failed to start"*, suele quedar un `sqlservr.exe` huérfano reteniendo la instancia:
+#### Si algo falla con LocalDB
+
+LocalDB **se apaga solo** tras unos minutos sin actividad, y vuelve a arrancar en cuanto llega
+una conexión. El problema es que al reiniciarse cambia el nombre de su canal interno, y las
+conexiones que la API dejó abiertas apuntan al canal viejo.
+
+| Síntoma | Causa | Solución |
+|---|---|---|
+| `503` con `API_009` | La base no responde | `sqllocaldb start MSSQLLocalDB` |
+| `500` con `API_004` al iniciar sesión, pero `sqlcmd` sí conecta | La API quedó con conexiones del canal anterior | **Reinicie la API** (Ctrl+C y `dotnet run` otra vez) |
+| `sqllocaldb start` falla con *"SQL Server process failed to start"* | Quedó un `sqlservr.exe` huérfano reteniendo la instancia | ver abajo |
 
 ```bash
 powershell -NoProfile -Command "Get-Process sqlservr -ErrorAction SilentlyContinue | Stop-Process -Force; sqllocaldb start MSSQLLocalDB"
 ```
+
+Nada de esto ocurre con docker-compose ni con un SQL Server normal: es una particularidad de
+LocalDB como base de desarrollo.
 
 ---
 

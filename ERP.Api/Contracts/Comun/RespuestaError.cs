@@ -40,6 +40,15 @@ namespace ERP.Api.Contracts.Comun
         public static RespuestaError Conflicto(string traceId, string mensaje, string? codigoError = null, object? detalles = null) =>
             Crear(traceId, "conflict", mensaje, codigoError, detalles, CodigosErrorApi.ConflictoDeEstado);
 
+        public static RespuestaError NoDisponible(string traceId, string? codigoError = null) =>
+            Crear(
+                traceId,
+                "service_unavailable",
+                "El servicio no está disponible en este momento. Vuelva a intentarlo en unos instantes.",
+                codigoError,
+                null,
+                CodigosErrorApi.ServicioDatosNoDisponible);
+
         public static RespuestaError Interno(string traceId, string? codigoError = null) =>
             Crear(
                 traceId,

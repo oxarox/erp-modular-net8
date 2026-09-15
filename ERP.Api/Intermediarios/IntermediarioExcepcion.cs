@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Text.Json;
 using ERP.Api.Contracts.Comun;
 using ERP.Aplicacion.Comun.Excepciones;
@@ -36,7 +37,7 @@ namespace ERP.Api.Intermediarios
             {
                 await _siguiente(contexto);
             }
-            catch (ExcepcionAplicacion ex)
+            catch (ExcepcionAplicacion ex) when (!EsFalloDeBaseDeDatos(ex))
             {
                 (int estado, RespuestaError cuerpo) = Traducir(ex, contexto.TraceIdentifier);
                 await EscribirAsync(contexto, estado, cuerpo);
@@ -45,6 +46,24 @@ namespace ERP.Api.Intermediarios
             {
                 // El cliente cortó la conexión: no es un error del servidor y no se registra como tal.
                 _log.LogDebug("Request {Ruta} cancelado por el cliente.", contexto.Request.Path);
+            }
+            catch (Exception ex) when (EsFalloDeBaseDeDatos(ex))
+            {
+                // Una dependencia caída NO es lo mismo que un bug, y mezclarlas cuesta caro:
+                // con un 500 genérico, quien está de turno no sabe si buscar en el código o
+                // levantar la base. Un 503 con su propio código lo dice en un segundo, y le
+                // indica al cliente que reintentar tiene sentido.
+                _log.LogError(
+                    ex,
+                    "La base de datos no respondió en {Metodo} {Ruta}. Correlación: {Correlacion}",
+                    contexto.Request.Method,
+                    contexto.Request.Path,
+                    contexto.TraceIdentifier);
+
+                await EscribirAsync(
+                    contexto,
+                    StatusCodes.Status503ServiceUnavailable,
+                    RespuestaError.NoDisponible(contexto.TraceIdentifier));
             }
             catch (Exception ex)
             {
@@ -60,6 +79,31 @@ namespace ERP.Api.Intermediarios
                     StatusCodes.Status500InternalServerError,
                     RespuestaError.Interno(contexto.TraceIdentifier));
             }
+        }
+
+        /// <summary>
+        /// Recorre la cadena de excepciones buscando un fallo del motor de datos.
+        /// Hace falta recorrerla porque el fallo real llega envuelto: EF Core lo encapsula en
+        /// <c>RetryLimitExceededException</c> cuando se agotan los reintentos, y los casos de
+        /// uso que abren transacción lo traducen a <see cref="ExcepcionInternaAplicacion"/>.
+        /// Mirar solo el tipo de la excepción externa haría que una base caída se reportara
+        /// como un error interno cualquiera.
+        /// </summary>
+        private static bool EsFalloDeBaseDeDatos(Exception? excepcion)
+        {
+            for (Exception? actual = excepcion; actual is not null;)
+            {
+                if (actual is DbException)
+                {
+                    return true;
+                }
+
+                actual = actual is ExcepcionInternaAplicacion interna && interna.Interna is not null
+                    ? interna.Interna
+                    : actual.InnerException;
+            }
+
+            return false;
         }
 
         private static (int Estado, RespuestaError Cuerpo) Traducir(ExcepcionAplicacion excepcion, string traceId) =>

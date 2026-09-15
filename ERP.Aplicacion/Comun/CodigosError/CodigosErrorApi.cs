@@ -14,5 +14,8 @@ namespace ERP.Aplicacion.Comun.CodigosError
         public const string CuerpoInvalido = "API_006";
         public const string ParametroInvalido = "API_007";
         public const string ConflictoDeEstado = "API_008";
+
+        /// <summary>La base de datos u otra dependencia no responde. Es 503, no 500: el sistema no tiene un fallo, tiene una dependencia caída.</summary>
+        public const string ServicioDatosNoDisponible = "API_009";
     }
 }
