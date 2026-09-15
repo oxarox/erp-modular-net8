@@ -1,11 +1,17 @@
 {
-  "//": "Copie este archivo como appsettings.Development.json. Está en .gitignore a propósito: es el archivo donde viven los valores locales.",
+  "//": "Copie este archivo como appsettings.Development.json (sin .ejemplo). Ese archivo está en .gitignore a propósito: es donde viven los valores locales y nunca se versiona.",
+
+  "//ConnectionStrings": "Deje UNA de las dos cadenas según cómo levante la base de datos. DefaultConnection apunta a SQL Server LocalDB (Windows; viene con Visual Studio o SQL Server Express). Si usa docker-compose, reemplácela por el valor de DefaultConnectionDocker. Ojo con las barras invertidas: en JSON van dobles.",
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost,1433;Database=ErpModular;User Id=sa;Password=SuClaveLocal_123;TrustServerCertificate=True;"
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=ErpModular;Trusted_Connection=True;TrustServerCertificate=True;",
+    "//DefaultConnectionDocker": "Server=localhost,1433;Database=ErpModular;User Id=sa;Password=ClaveLocal_Dev123;TrustServerCertificate=True;"
   },
+
+  "//Jwt": "Clave solo de desarrollo. En cualquier otro ambiente llega por la variable de entorno Jwt__ClaveFirma, y el arranque falla si falta o si tiene menos de 32 caracteres.",
   "Jwt": {
     "ClaveFirma": "clave-solo-para-desarrollo-de-al-menos-32-caracteres"
   },
+
   "Cors": {
     "OrigenesPermitidos": [ "http://localhost:5173", "http://localhost:3000" ]
   }

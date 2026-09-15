@@ -28,7 +28,7 @@ docker compose exec -T base-de-datos /opt/mssql-tools18/bin/sqlcmd -S localhost 
 docker compose exec -T base-de-datos /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'ClaveLocal_Dev123' -C -d ErpModular -b -i /dev/stdin < ERP.Infraestructura/Persistencia/Migraciones/20260101_001_datos_semilla.sql
 ```
 
-La API queda en `http://localhost:8080`. Salta al [paso 3](#3-iniciar-sesión).
+La API queda en `http://localhost:8080`. Salta al [paso 4](#4-iniciar-sesión).
 
 ## Opción B — con el SDK de .NET y SQL Server LocalDB
 
@@ -62,18 +62,35 @@ sqlcmd -S "(localdb)\MSSQLLocalDB" -d ErpModular -b -Q "SELECT (SELECT COUNT(*) 
 
 > `empresas = 2`, `productos = 3`, `permisos = 12`.
 
-### 2. Levantar la API
+### 2. Configurar los secretos locales
 
-Los secretos van por variable de entorno; el arranque **falla a propósito** si falta alguno.
+Copie el archivo de ejemplo. El real está en `.gitignore` a propósito: es donde viven los
+valores locales y nunca se versiona.
 
 ```bash
-Jwt__ClaveFirma="clave-solo-para-desarrollo-de-al-menos-32-caracteres" ConnectionStrings__DefaultConnection='Server=(localdb)\MSSQLLocalDB;Database=ErpModular;Trusted_Connection=True;TrustServerCertificate=True;' dotnet run --project ERP.Api/ERP.Api.csproj
+cp ERP.Api/appsettings.Development.json.ejemplo ERP.Api/appsettings.Development.json
 ```
 
-En PowerShell:
+Viene apuntando a LocalDB. Si usa docker-compose, reemplace la cadena de conexión por la que el
+propio archivo indica.
 
-```powershell
-$env:Jwt__ClaveFirma="clave-solo-para-desarrollo-de-al-menos-32-caracteres"; $env:ConnectionStrings__DefaultConnection='Server=(localdb)\MSSQLLocalDB;Database=ErpModular;Trusted_Connection=True;TrustServerCertificate=True;'; dotnet run --project ERP.Api/ERP.Api.csproj
+> **Por qué este camino y no variables de entorno:** funciona igual en bash, PowerShell y CMD.
+> Las variables de entorno siguen soportadas y **ganan** sobre el archivo, que es como se
+> inyectan los secretos en un contenedor; pero su sintaxis cambia con cada shell:
+>
+> | Shell | Forma |
+> |---|---|
+> | bash / zsh | `VAR="valor" dotnet run ...` |
+> | PowerShell | `$env:VAR = "valor"` en una línea, y `dotnet run ...` en la siguiente |
+> | CMD | `set VAR=valor` y luego `dotnet run ...` |
+>
+> En PowerShell, `VAR=valor comando` **no existe**: intenta ejecutar un programa llamado
+> `VAR=valor` y falla con "no se reconoce como nombre de un cmdlet".
+
+### 3. Levantar la API
+
+```bash
+dotnet run --project ERP.Api/ERP.Api.csproj
 ```
 
 La API queda en `http://localhost:5080` y Swagger en `http://localhost:5080/swagger`.
@@ -84,9 +101,17 @@ curl http://localhost:5080/api/salud
 
 > `{"estado":"ok","version":"1.0.0.0","entorno":"Development","fechaUtc":"..."}`
 
+Si responde un 500 al iniciar sesión con un error de conexión a SQL Server, LocalDB se detuvo:
+vuelva a `sqllocaldb start MSSQLLocalDB`. Si el arranque de LocalDB falla con *"SQL Server
+process failed to start"*, suele quedar un `sqlservr.exe` huérfano reteniendo la instancia:
+
+```bash
+powershell -NoProfile -Command "Get-Process sqlservr -ErrorAction SilentlyContinue | Stop-Process -Force; sqllocaldb start MSSQLLocalDB"
+```
+
 ---
 
-## 3. Iniciar sesión
+## 4. Iniciar sesión
 
 La semilla crea dos empresas para poder comprobar el aislamiento. Contraseña de ambas:
 `Demo.1234`.
@@ -112,7 +137,7 @@ curl -s -X POST http://localhost:5080/api/autenticacion/iniciar-sesion -H "Conte
 
 > `{"code":"unauthorized", ..., "errorCode":"AUTH_001"}`
 
-## 4. Un CRUD completo: marcas
+## 5. Un CRUD completo: marcas
 
 ```bash
 curl -s -X POST http://localhost:5080/api/marcas/crear-marca -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"nombre":"Bosch","descripcion":"Herramienta profesional","activo":true}'
@@ -139,7 +164,7 @@ curl -s http://localhost:5080/api/marcas/buscar-marcas
 
 > `{"code":"unauthorized", ..., "errorCode":"API_001"}`
 
-## 5. El caso complejo: registrar una venta
+## 6. El caso complejo: registrar una venta
 
 Dos líneas: dos unidades de un producto con descuento, más un servicio que **no** descuenta
 inventario.
@@ -190,7 +215,7 @@ curl -s -X POST http://localhost:5080/api/ventas/registrar-venta -H "Authorizati
 En ambos casos, vuelve a consultar `dbo.existencias`: **no cambió nada**. La validación ocurre
 antes de abrir la transacción.
 
-## 6. La prueba que más importa: el aislamiento multiempresa
+## 7. La prueba que más importa: el aislamiento multiempresa
 
 Inicia sesión con la otra empresa:
 
@@ -213,7 +238,7 @@ curl -s -i http://localhost:5080/api/marcas/obtener-marca-por-id/3 -H "Authoriza
 > `404`, no `403`. Responder 403 confirmaría que el recurso existe, que es justo lo que no se
 > quiere filtrar. Ver [`multiempresa.md`](multiempresa.md).
 
-## 7. Las pruebas automatizadas
+## 8. Las pruebas automatizadas
 
 ```bash
 dotnet test

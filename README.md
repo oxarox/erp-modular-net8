@@ -177,10 +177,19 @@ en orden.
 
 ```bash
 cp ERP.Api/appsettings.Development.json.ejemplo ERP.Api/appsettings.Development.json
-dotnet restore
-dotnet build
+```
+
+El archivo copiado ya apunta a SQL Server LocalDB; si usa docker-compose, cambie la cadena de
+conexión por la que el propio archivo indica. Después:
+
+```bash
 dotnet run --project ERP.Api/ERP.Api.csproj
 ```
+
+Los secretos también pueden llegar por variable de entorno —`Jwt__ClaveFirma`,
+`ConnectionStrings__DefaultConnection`— y en ese caso **ganan** sobre el archivo. Es así como se
+inyectan en un contenedor. La sintaxis cambia según la shell: ver
+[`docs/probar-en-local.md`](docs/probar-en-local.md).
 
 ### Pruebas
 
