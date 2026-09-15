@@ -1,0 +1,18 @@
+<Project>
+
+  <!-- Propiedades compartidas por los cinco proyectos de la solución.
+       Centralizarlas evita que cada .csproj repita (y desincronice) la misma configuración. -->
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors>CS8600;CS8602;CS8618</WarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Company>Portafolio</Company>
+    <Product>ERP Modular</Product>
+    <NeutralLanguage>es</NeutralLanguage>
+  </PropertyGroup>
+
+</Project>

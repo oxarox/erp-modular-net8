@@ -1,0 +1,33 @@
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Resultados de compilación
+bin/
+obj/
+**/bin/
+**/obj/
+TestResults/
+*.trx
+coverage/
+*.coverage
+*.coverlet.json
+
+# Entornos locales y secretos: NUNCA se versionan
+**/appsettings.Development.json
+**/appsettings.Local.json
+.env
+.env.*
+*.pfx
+*.p12
+secrets.json
+
+# Artefactos de herramientas de IA
+.claude/
+CLAUDE.md
+AGENTS.md

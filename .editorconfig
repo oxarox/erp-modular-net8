@@ -1,0 +1,47 @@
+# Convenciones de estilo de la solución. Ver docs/arquitectura.md.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{json,yml,yaml,md,csproj,props,targets}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+# Usings
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:suggestion
+
+# Namespaces con ámbito de archivo (file-scoped)
+csharp_style_namespace_declarations = block_scoped:silent
+
+# Preferencias de expresión
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_prefer_braces = true:warning
+
+# Nombres: PascalCase para públicos, _camelCase para campos privados
+dotnet_naming_rule.campos_privados_con_guion_bajo.severity = warning
+dotnet_naming_rule.campos_privados_con_guion_bajo.symbols = campos_privados
+dotnet_naming_rule.campos_privados_con_guion_bajo.style = prefijo_guion_bajo
+
+dotnet_naming_symbols.campos_privados.applicable_kinds = field
+dotnet_naming_symbols.campos_privados.applicable_accessibilities = private
+dotnet_naming_symbols.campos_privados.required_modifiers = readonly
+
+dotnet_naming_style.prefijo_guion_bajo.required_prefix = _
+dotnet_naming_style.prefijo_guion_bajo.capitalization = camel_case
+
+# Nulabilidad: los warnings de referencia nula son errores en Release
+dotnet_diagnostic.CS8600.severity = warning
+dotnet_diagnostic.CS8602.severity = warning
+dotnet_diagnostic.CS8618.severity = warning

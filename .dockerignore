@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+**/.vscode/
+**/.git/
+**/.github/
+**/node_modules/
+**/TestResults/
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/.env
+**/.env.*
+**/*.user
+docs/
+README.md
