@@ -1,0 +1,65 @@
+name: CI
+
+# Se ejecuta en cada push a las ramas de integración y en cada pull request:
+# ninguna rama llega a main sin haber compilado y pasado las pruebas.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+env:
+  DOTNET_VERSION: "8.0.x"
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  compilar-y-probar:
+    name: Compilar y probar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cachear paquetes NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restaurar dependencias
+        run: dotnet restore
+
+      - name: Compilar
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Ejecutar pruebas
+        run: dotnet test --configuration Release --no-build --logger "trx;LogFileName=resultados.trx" --results-directory ./resultados
+
+      - name: Publicar resultados de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-pruebas
+          path: ./resultados
+
+  imagen-docker:
+    name: Construir imagen
+    needs: compilar-y-probar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v4
+
+      # Se construye la imagen en cada integración aunque no se publique:
+      # un Dockerfile roto debe descubrirse aquí, no durante el despliegue.
+      - name: Construir imagen
+        run: docker build -t erp-modular:${{ github.sha }} .

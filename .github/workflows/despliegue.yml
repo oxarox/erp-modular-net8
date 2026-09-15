@@ -1,0 +1,54 @@
+name: Despliegue
+
+# Despliegue manual y con entorno protegido: el push a main construye y prueba,
+# pero publicar en un ambiente es una decisión explícita de una persona.
+on:
+  workflow_dispatch:
+    inputs:
+      ambiente:
+        description: "Ambiente de destino"
+        required: true
+        type: choice
+        options: [qa, produccion]
+
+jobs:
+  desplegar:
+    name: Desplegar a ${{ inputs.ambiente }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.ambiente }}
+
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v4
+
+      # Host, credenciales y URL del webhook viven en los secretos del ambiente,
+      # nunca en el archivo del workflow.
+      - name: Notificar al orquestador
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_DESPLIEGUE }}
+        run: |
+          set -euo pipefail
+          respuesta=$(curl -sS -X POST \
+            -H "Content-Type: application/json" \
+            -d "{\"commit\":\"${GITHUB_SHA}\",\"ambiente\":\"${{ inputs.ambiente }}\"}" \
+            -w "\n%{http_code}" \
+            "${WEBHOOK_URL}")
+          codigo=$(echo "${respuesta}" | tail -n1)
+          echo "HTTP ${codigo}"
+          [[ "${codigo}" =~ ^2 ]] || { echo "El despliegue no fue aceptado."; exit 1; }
+
+      - name: Verificar la sonda de salud
+        env:
+          URL_SALUD: ${{ secrets.URL_SALUD }}
+        run: |
+          set -euo pipefail
+          for intento in $(seq 1 12); do
+            if curl -fsS "${URL_SALUD}" > /dev/null; then
+              echo "La aplicación responde."
+              exit 0
+            fi
+            echo "Intento ${intento}: todavía no responde, reintentando en 10 s."
+            sleep 10
+          done
+          echo "La aplicación no respondió tras el despliegue."
+          exit 1

@@ -1,0 +1,55 @@
+name: Migraciones de base de datos
+
+# Las migraciones NO se aplican al arrancar la aplicación.
+# Son un paso deliberado, manual y auditable: una migración mal escrita que corre
+# sola en el arranque de tres réplicas es un incidente, no un despliegue.
+# Ver docs/BD/migraciones.md.
+on:
+  workflow_dispatch:
+    inputs:
+      ambiente:
+        description: "Ambiente de destino"
+        required: true
+        type: choice
+        options: [qa, produccion]
+      archivo:
+        description: "Archivo de migración a ejecutar (ruta dentro de ERP.Infraestructura/Persistencia/Migraciones)"
+        required: true
+        type: string
+
+jobs:
+  aplicar:
+    name: Aplicar migración en ${{ inputs.ambiente }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.ambiente }}
+
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v4
+
+      - name: Verificar que el archivo existe
+        run: |
+          set -euo pipefail
+          ruta="ERP.Infraestructura/Persistencia/Migraciones/${{ inputs.archivo }}"
+          test -f "${ruta}" || { echo "No existe ${ruta}"; exit 1; }
+          echo "ruta=${ruta}" >> "$GITHUB_ENV"
+
+      - name: Instalar sqlcmd
+        run: |
+          set -euo pipefail
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
+          curl -fsSL https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
+
+      # La migración se ejecuta dentro de una transacción y con SET XACT_ABORT ON:
+      # o se aplica completa, o no se aplica nada.
+      - name: Ejecutar migración
+        env:
+          CADENA_CONEXION: ${{ secrets.CADENA_CONEXION_MIGRACIONES }}
+        run: |
+          set -euo pipefail
+          /opt/mssql-tools18/bin/sqlcmd -C \
+            -S "$(echo "${CADENA_CONEXION}" | cut -d';' -f1)" \
+            -i "${{ env.ruta }}" \
+            -b -V 11
