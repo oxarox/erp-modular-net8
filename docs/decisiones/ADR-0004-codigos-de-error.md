@@ -17,10 +17,11 @@ con formato `MODULO_###`:
 
 ```json
 {
-  "codigo": "MARCA_003",
-  "mensaje": "Ya existe una marca con el mismo nombre para la empresa.",
-  "correlacionId": "8f3c1e...",
-  "detalles": null
+  "traceId": "8f3c1e94a2b04d7f",
+  "code": "conflict",
+  "message": "Ya existe una marca con el mismo nombre para la empresa.",
+  "details": null,
+  "errorCode": "MARCA_003"
 }
 ```
 
@@ -34,6 +35,9 @@ Reglas del catálogo:
    en la misma entrega que introduce el código.
 4. El mensaje es para la persona; el código es para el programa. El mensaje puede cambiar
    libremente, el código no.
+5. `errorCode` **nunca viaja null**. Un cliente que recibe null no puede decidir nada y termina
+   comparando el texto del mensaje, que sí cambia. Cada factory del sobre aplica el fallback de
+   su familia.
 
 La traducción de excepción a respuesta ocurre en **un solo lugar**: `IntermediarioExcepcion`.
 Ningún controlador arma su propio error.
@@ -44,7 +48,9 @@ Ningún controlador arma su propio error.
 
 - El front escribe un manejador de errores, no treinta y uno.
 - Reformular un mensaje en español no es un cambio de contrato.
-- El `correlacionId` cruza el error del usuario con el log del servidor sin adivinar por hora.
+- El `traceId` cruza el error del usuario con el log del servidor sin adivinar por hora.
+- El 401 y el 403 llevan el mismo sobre que el resto, aunque ASP.NET los devuelva vacíos por
+  defecto: el cliente no necesita tratarlos como casos especiales.
 
 **Costo asumido**
 
