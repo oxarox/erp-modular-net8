@@ -1,0 +1,12 @@
+{
+  "//": "Copie este archivo como appsettings.Development.json. Está en .gitignore a propósito: es el archivo donde viven los valores locales.",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost,1433;Database=ErpModular;User Id=sa;Password=SuClaveLocal_123;TrustServerCertificate=True;"
+  },
+  "Jwt": {
+    "ClaveFirma": "clave-solo-para-desarrollo-de-al-menos-32-caracteres"
+  },
+  "Cors": {
+    "OrigenesPermitidos": [ "http://localhost:5173", "http://localhost:3000" ]
+  }
+}
