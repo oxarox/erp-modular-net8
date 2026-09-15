@@ -7,6 +7,7 @@
 
 | Documento | Para qué sirve |
 |---|---|
+| [`probar-en-local.md`](probar-en-local.md) | Guía de humo de punta a punta, con comandos y respuestas esperadas |
 | [`arquitectura.md`](arquitectura.md) | Capas, reglas de dependencia y qué va en cada carpeta |
 | [`decisiones/`](decisiones/) | Un ADR por decisión técnica: contexto, alternativas y costo |
 | [`multiempresa.md`](multiempresa.md) | Cómo se aísla cada empresa y dónde puede romperse |

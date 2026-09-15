@@ -190,6 +190,12 @@ dotnet test
 
 Las 32 pruebas corren sin base de datos y sin red.
 
+### Guía de humo completa
+
+[`docs/probar-en-local.md`](docs/probar-en-local.md) recorre el sistema de punta a punta —cargar
+datos, iniciar sesión, crear una marca, registrar una venta, verificar el inventario y comprobar
+el aislamiento multiempresa— con cada comando y cada respuesta esperada.
+
 ### Credenciales de ejemplo
 
 Vienen de la semilla de desarrollo, en dos empresas distintas para que puedas comprobar el
