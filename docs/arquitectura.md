@@ -81,6 +81,7 @@ correrla.
 | `Filtros/` | Comportamiento por acción: validación, auditoría. |
 | `Intermediarios/` | Comportamiento por request: correlación, manejo de errores. |
 | `Autorizacion/` | RBAC por permisos. |
+| `Convenciones/` | Derivación automática de rutas desde el nombre de la clase y del método. |
 
 ## Dónde va una regla nueva
 
@@ -124,7 +125,7 @@ Casos límite frecuentes:
 | Configuración EF | `Configuracion<Entidad>` | `ConfiguracionMarca` |
 | Prueba | `<ClaseProbada>Tests` | `ManejadorCrearMarcaTests` |
 | Método de prueba | `Metodo_Escenario_Resultado` | `ManejarAsync_NombreDuplicado_LanzaConflicto` |
-| Ruta HTTP | kebab-case | `/api/autenticacion/iniciar-sesion` |
+| Ruta HTTP | kebab-case, derivada del nombre | `ControladorAutenticacion.IniciarSesion` → `/api/autenticacion/iniciar-sesion` |
 | Tabla | snake_case plural | `ventas_detalle` |
 | Índice | `IX_`/`UQ_` + tabla + columnas | `UQ_marcas_empresa_nombre` |
 

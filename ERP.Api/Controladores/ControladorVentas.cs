@@ -9,56 +9,57 @@ using Microsoft.AspNetCore.Mvc;
 namespace ERP.Api.Controladores
 {
     [Authorize]
-    [Route("api/ventas")]
     public sealed class ControladorVentas : ControladorBase
     {
-        [HttpGet]
+        [HttpGet("[action]")]
         [AutorizarPermiso(Permisos.Ventas.Ver)]
         [ProducesResponseType(typeof(RespuestaPaginada<RespuestaVenta>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<RespuestaPaginada<RespuestaVenta>>> Buscar(
+        public async Task<ActionResult<RespuestaPaginada<RespuestaVenta>>> BuscarVentas(
+            [FromQuery] SolicitudBuscarVentas solicitud,
             [FromServices] ManejadorBuscarVentas manejador,
-            [FromQuery] DateTime? desde,
-            [FromQuery] DateTime? hasta,
-            [FromQuery] string? estado,
-            [FromQuery] int? pagina,
-            [FromQuery] int? tamanoPagina,
             CancellationToken ct)
         {
+            long empresaId = this.ObtenerEmpresaIdDesdeToken();
+
             ResultadoPaginado<ItemVenta> resultado = await manejador.ManejarAsync(
-                EmpresaId,
-                new ConsultaBuscarVentas(desde, hasta, estado, pagina, tamanoPagina),
+                empresaId,
+                new ConsultaBuscarVentas(solicitud.Desde, solicitud.Hasta, solicitud.Estado, solicitud.Pagina, solicitud.TamanoPagina),
                 ct);
 
-            return Ok(ARespuesta(resultado, v => new RespuestaVenta(v.Id, v.Numero, v.FechaUtc, v.Estado, v.MetodoPago, v.Total)));
+            return Ok(ARespuesta(
+                resultado,
+                v => new RespuestaVenta(v.Id, v.Numero, v.FechaUtc, v.Estado, v.MetodoPago, v.Total)));
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [AutorizarPermiso(Permisos.Ventas.Registrar)]
         [ProducesResponseType(typeof(RespuestaVentaRegistrada), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(RespuestaError), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(RespuestaError), StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<RespuestaVentaRegistrada>> Registrar(
-            [FromServices] ManejadorRegistrarVenta manejador,
+        public async Task<ActionResult<RespuestaVentaRegistrada>> RegistrarVenta(
             [FromBody] SolicitudRegistrarVenta solicitud,
+            [FromServices] ManejadorRegistrarVenta manejador,
             CancellationToken ct)
         {
+            long empresaId = this.ObtenerEmpresaIdDesdeToken();
+
             ComandoRegistrarVenta comando = new(
                 solicitud.ClienteId,
                 solicitud.AlmacenId,
                 solicitud.MetodoPago,
                 solicitud.Lineas.Select(l => new LineaComandoVenta(l.ProductoId, l.Cantidad, l.DescuentoLinea)).ToList());
 
-            ResultadoRegistrarVenta resultado = await manejador.ManejarAsync(EmpresaId, comando, ct);
+            ResultadoRegistrarVenta resultado = await manejador.ManejarAsync(empresaId, comando, ct);
 
-            RespuestaVentaRegistrada cuerpo = new(
-                resultado.Id,
-                resultado.Numero,
-                resultado.Subtotal,
-                resultado.Descuento,
-                resultado.Impuesto,
-                resultado.Total);
-
-            return CreatedAtAction(nameof(Buscar), new { }, cuerpo);
+            return StatusCode(
+                StatusCodes.Status201Created,
+                new RespuestaVentaRegistrada(
+                    resultado.Id,
+                    resultado.Numero,
+                    resultado.Subtotal,
+                    resultado.Descuento,
+                    resultado.Impuesto,
+                    resultado.Total));
         }
     }
 }

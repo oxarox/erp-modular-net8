@@ -9,12 +9,15 @@ namespace ERP.Api.Validadores.Ventas
         public ValidadorSolicitudRegistrarVenta()
         {
             RuleFor(s => s.AlmacenId)
+                .Cascade(CascadeMode.Stop)
                 .GreaterThan(0).WithErrorCode(CodigosErrorVentas.AlmacenNoEncontrado).WithMessage("Debe indicar un almacén válido.");
 
             RuleFor(s => s.MetodoPago)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty().WithErrorCode(CodigosErrorVentas.MetodoPagoInvalido).WithMessage("El método de pago es obligatorio.");
 
             RuleFor(s => s.Lineas)
+                .Cascade(CascadeMode.Stop)
                 .NotNull().WithErrorCode(CodigosErrorVentas.SinLineas).WithMessage("La venta debe tener al menos una línea.")
                 .Must(l => l is { Count: > 0 }).WithErrorCode(CodigosErrorVentas.SinLineas).WithMessage("La venta debe tener al menos una línea.");
 
@@ -27,12 +30,15 @@ namespace ERP.Api.Validadores.Ventas
         public ValidadorSolicitudLineaVenta()
         {
             RuleFor(l => l.ProductoId)
+                .Cascade(CascadeMode.Stop)
                 .GreaterThan(0).WithErrorCode(CodigosErrorVentas.ProductoNoEncontrado).WithMessage("Debe indicar un producto válido.");
 
             RuleFor(l => l.Cantidad)
+                .Cascade(CascadeMode.Stop)
                 .GreaterThan(0).WithErrorCode(CodigosErrorVentas.CantidadInvalida).WithMessage("La cantidad debe ser mayor a cero.");
 
             RuleFor(l => l.DescuentoLinea)
+                .Cascade(CascadeMode.Stop)
                 .GreaterThanOrEqualTo(0m).When(l => l.DescuentoLinea.HasValue)
                 .WithErrorCode(CodigosErrorVentas.DescuentoInvalido).WithMessage("El descuento no puede ser negativo.");
         }

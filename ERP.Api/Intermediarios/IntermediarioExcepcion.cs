@@ -1,6 +1,5 @@
 using System.Text.Json;
 using ERP.Api.Contracts.Comun;
-using ERP.Aplicacion.Comun.CodigosError;
 using ERP.Aplicacion.Comun.Excepciones;
 
 namespace ERP.Api.Intermediarios
@@ -39,7 +38,8 @@ namespace ERP.Api.Intermediarios
             }
             catch (ExcepcionAplicacion ex)
             {
-                await EscribirAsync(contexto, MapearEstado(ex), ex.CodigoError ?? CodigosErrorApi.ErrorInterno, ex.Message, ex.Detalles);
+                (int estado, RespuestaError cuerpo) = Traducir(ex, contexto.TraceIdentifier);
+                await EscribirAsync(contexto, estado, cuerpo);
             }
             catch (OperationCanceledException) when (contexto.RequestAborted.IsCancellationRequested)
             {
@@ -58,22 +58,39 @@ namespace ERP.Api.Intermediarios
                 await EscribirAsync(
                     contexto,
                     StatusCodes.Status500InternalServerError,
-                    CodigosErrorApi.ErrorInterno,
-                    "Ocurrió un error inesperado. Si el problema persiste, informe el identificador de correlación.",
-                    detalles: null);
+                    RespuestaError.Interno(contexto.TraceIdentifier));
             }
         }
 
-        private static int MapearEstado(ExcepcionAplicacion excepcion) => excepcion switch
-        {
-            ExcepcionSolicitudInvalida => StatusCodes.Status400BadRequest,
-            ExcepcionNoAutorizada no => no.EsProhibido ? StatusCodes.Status403Forbidden : StatusCodes.Status401Unauthorized,
-            ExcepcionRecursoNoEncontrado => StatusCodes.Status404NotFound,
-            ExcepcionConflicto => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status500InternalServerError,
-        };
+        private static (int Estado, RespuestaError Cuerpo) Traducir(ExcepcionAplicacion excepcion, string traceId) =>
+            excepcion switch
+            {
+                ExcepcionSolicitudInvalida =>
+                    (StatusCodes.Status400BadRequest,
+                     RespuestaError.SolicitudInvalida(traceId, excepcion.Message, excepcion.CodigoError, excepcion.Detalles)),
 
-        private static async Task EscribirAsync(HttpContext contexto, int estado, string codigo, string mensaje, object? detalles)
+                ExcepcionNoAutorizada { EsProhibido: true } =>
+                    (StatusCodes.Status403Forbidden,
+                     RespuestaError.Prohibido(traceId, excepcion.Message, excepcion.CodigoError)),
+
+                ExcepcionNoAutorizada =>
+                    (StatusCodes.Status401Unauthorized,
+                     RespuestaError.NoAutenticado(traceId, excepcion.Message, excepcion.CodigoError)),
+
+                // Un recurso de otra empresa también cae aquí: devolver 403 confirmaría
+                // que existe, que es justo lo que no se quiere filtrar.
+                ExcepcionRecursoNoEncontrado =>
+                    (StatusCodes.Status404NotFound,
+                     RespuestaError.NoEncontrado(traceId, excepcion.Message, excepcion.CodigoError)),
+
+                ExcepcionConflicto =>
+                    (StatusCodes.Status409Conflict,
+                     RespuestaError.Conflicto(traceId, excepcion.Message, excepcion.CodigoError, excepcion.Detalles)),
+
+                _ => (StatusCodes.Status500InternalServerError, RespuestaError.Interno(traceId, excepcion.CodigoError)),
+            };
+
+        private static async Task EscribirAsync(HttpContext contexto, int estado, RespuestaError cuerpo)
         {
             if (contexto.Response.HasStarted)
             {
@@ -84,8 +101,6 @@ namespace ERP.Api.Intermediarios
             contexto.Response.Clear();
             contexto.Response.StatusCode = estado;
             contexto.Response.ContentType = "application/json; charset=utf-8";
-
-            RespuestaError cuerpo = new(codigo, mensaje, contexto.TraceIdentifier, detalles);
 
             await contexto.Response.WriteAsync(JsonSerializer.Serialize(cuerpo, OpcionesJson));
         }

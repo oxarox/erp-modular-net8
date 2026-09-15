@@ -10,15 +10,14 @@ namespace ERP.Api.Controladores
     /// Emisión y renovación de sesiones. Es el único controlador anónimo junto con el de salud.
     /// </summary>
     [AllowAnonymous]
-    [Route("api/autenticacion")]
     public sealed class ControladorAutenticacion : ControladorBase
     {
-        [HttpPost("iniciar-sesion")]
+        [HttpPost("[action]")]
         [ProducesResponseType(typeof(RespuestaSesion), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(RespuestaError), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<RespuestaSesion>> IniciarSesion(
-            [FromServices] ManejadorIniciarSesion manejador,
             [FromBody] SolicitudIniciarSesion solicitud,
+            [FromServices] ManejadorIniciarSesion manejador,
             CancellationToken ct)
         {
             ResultadoSesion sesion = await manejador.ManejarAsync(
@@ -28,12 +27,12 @@ namespace ERP.Api.Controladores
             return Ok(Proyectar(sesion));
         }
 
-        [HttpPost("refrescar")]
+        [HttpPost("[action]")]
         [ProducesResponseType(typeof(RespuestaSesion), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(RespuestaError), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<RespuestaSesion>> Refrescar(
-            [FromServices] ManejadorRefrescarSesion manejador,
+        public async Task<ActionResult<RespuestaSesion>> RefrescarSesion(
             [FromBody] SolicitudRefrescarSesion solicitud,
+            [FromServices] ManejadorRefrescarSesion manejador,
             CancellationToken ct)
         {
             ResultadoSesion sesion = await manejador.ManejarAsync(

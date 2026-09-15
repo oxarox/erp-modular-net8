@@ -8,11 +8,14 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace ERP.Api.Filtros
 {
     /// <summary>
-    /// Ejecuta el validador FluentValidation del cuerpo antes de entrar a la acción.
+    /// Ejecuta el validador FluentValidation de cada argumento antes de entrar a la acción.
     /// <para>
-    /// Con este filtro, ningún controlador empieza con quince líneas de comprobaciones:
-    /// si la entrada no es válida, la acción sencillamente no se ejecuta, y el cliente
-    /// recibe la lista completa de campos erróneos en una sola respuesta.
+    /// Se registra de forma GLOBAL, no por controlador: así ningún endpoint puede olvidarse de
+    /// validar. Con este filtro, ninguna acción empieza con quince líneas de comprobaciones.
+    /// </para>
+    /// <para>
+    /// Devuelve <b>todos</b> los campos inválidos de una vez, no el primero: obligar a corregir
+    /// de a uno es una mala experiencia y multiplica los viajes al servidor.
     /// </para>
     /// </summary>
     public sealed class FiltroValidacionFluent : IAsyncActionFilter
@@ -35,6 +38,8 @@ namespace ERP.Api.Filtros
                     continue;
                 }
 
+                // El validador se resuelve por reflexión sobre el tipo real del argumento:
+                // agregar un validador nuevo no obliga a tocar este filtro ni el arranque.
                 Type tipoValidador = typeof(IValidator<>).MakeGenericType(argumento.GetType());
 
                 if (_proveedor.GetService(tipoValidador) is not IValidator validador)
@@ -59,11 +64,8 @@ namespace ERP.Api.Filtros
 
             if (errores.Count > 0)
             {
-                contexto.Result = new BadRequestObjectResult(new RespuestaError(
-                    CodigosErrorApi.CuerpoInvalido,
-                    "La solicitud contiene campos inválidos.",
-                    contexto.HttpContext.TraceIdentifier,
-                    errores));
+                contexto.Result = new BadRequestObjectResult(
+                    RespuestaError.Validacion(contexto.HttpContext.TraceIdentifier, [.. errores]));
 
                 return;
             }

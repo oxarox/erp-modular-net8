@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using ERP.Api.Autorizacion;
+using ERP.Api.Convenciones;
 using ERP.Api.Filtros;
 using ERP.Api.Intermediarios;
 using ERP.Aplicacion.InyeccionDependencias;
@@ -9,6 +10,7 @@ using ERP.Infraestructura.Seguridad;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -38,6 +40,13 @@ constructor.Services
     {
         // Se registra globalmente: ningún controlador puede olvidarse de validar.
         opciones.Filters.Add<FiltroValidacionFluent>();
+
+        // Las rutas se derivan del nombre de la clase y del método:
+        //   ControladorMarcas.CrearMarca  →  POST /api/marcas/crear-marca
+        // Nadie escribe una ruta literal, así que ninguna puede quedar desalineada del
+        // código ni en PascalCase por descuido. Ver docs/convenciones-endpoints.md.
+        opciones.Conventions.Add(new ConvencionNombreControlador());
+        opciones.Conventions.Add(new RouteTokenTransformerConvention(new TransformadorSlug()));
     })
     .AddJsonOptions(json =>
     {

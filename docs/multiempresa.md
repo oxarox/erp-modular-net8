@@ -10,8 +10,8 @@ Decisión de fondo: [ADR-0002](decisiones/ADR-0002-multiempresa-por-filtro-globa
 
 ```mermaid
 flowchart LR
-    T["JWT<br/>claim empresa_id"] --> P["ProveedorContextoEmpresaHttp"]
-    P --> C["ControladorBase.EmpresaId"]
+    T["JWT<br/>claim empresa_id"] --> P["ProveedorContextoEmpresaHttp<br/>ObtenerEmpresaIdDesdeToken"]
+    P --> C["this.ObtenerEmpresaIdDesdeToken()"]
     P --> D["ContextoErp.EmpresaIdActual"]
     C --> M["Manejador<br/>ManejarAsync(empresaId, ...)"]
     M --> R["Repositorio<br/>Where(x => x.EmpresaId == empresaId)"]
@@ -83,8 +83,8 @@ curl -s -X POST http://localhost:8080/api/autenticacion/iniciar-sesion \
   -H "Content-Type: application/json" \
   -d '{"correo":"admin@norte.cl","contrasena":"Demo.1234"}'
 
-# 2. Listar marcas con ese token: aparecen las de Norte
-curl -s http://localhost:8080/api/marcas -H "Authorization: Bearer <token-de-norte>"
+# 2. Buscar marcas con ese token: aparecen las de Norte
+curl -s http://localhost:8080/api/marcas/buscar-marcas -H "Authorization: Bearer <token-de-norte>"
 
 # 3. Iniciar sesión como Sur y repetir: la lista viene vacía.
 #    Mismo endpoint, misma base, mismas tablas.

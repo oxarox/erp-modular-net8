@@ -3,25 +3,72 @@
 Con ~185 endpoints repartidos en 31 módulos, la consistencia no es estética: es lo que permite
 que el front escriba un cliente genérico en vez de treinta y uno.
 
-## Rutas
+## Cómo se arma una ruta
 
-- Prefijo `api/`, recurso en **plural**, todo en **kebab-case**:
-  `/api/marcas`, `/api/movimientos-inventario`, `/api/autenticacion/iniciar-sesion`.
-- El recurso es un sustantivo. Las acciones que no encajan en un verbo HTTP van como
-  subrecurso con verbo en infinitivo: `PATCH /api/marcas/{id}/desactivar`.
-- El `id` se restringe por tipo en la ruta: `{id:long}`. Un `/api/marcas/abc` responde 404 por
-  enrutamiento, sin llegar al controlador.
+**Nadie escribe una ruta literal.** Se derivan del nombre de la clase y del método:
+
+```csharp
+[Authorize]
+public sealed class ControladorMarcas : ControladorBase   // [Route("api/[controller]")] en la base
+{
+    [HttpPost("[action]")]
+    public async Task<ActionResult<RespuestaOperacionMarca>> CrearMarca(...)
+}
+```
+
+```
+ControladorMarcas . CrearMarca
+        │               │
+        │               └─ [action] ──► crear-marca
+        └─ [controller] ──► Marcas ──► marcas
+
+            POST /api/marcas/crear-marca
+```
+
+Dos piezas lo hacen posible, ambas registradas en `Program.cs`:
+
+| Pieza | Qué hace |
+|---|---|
+| [`ConvencionNombreControlador`](../ERP.Api/Convenciones/ConvencionNombreControlador.cs) | Recorta el prefijo `Controlador` del nombre de la clase |
+| [`TransformadorSlug`](../ERP.Api/Convenciones/TransformadorSlug.cs) | Convierte PascalCase a kebab-case en `[controller]` y `[action]` |
+
+El beneficio es que renombrar un método renombra la ruta, y **ninguna ruta puede quedar
+desalineada del código ni en PascalCase por descuido**. Con 36 controladores escritos por
+varias personas a lo largo de meses, es la diferencia entre una API consistente y un muestrario
+de criterios.
+
+Variantes en uso:
+
+| Forma | Ejemplo | Cuándo |
+|---|---|---|
+| `[HttpGet("[action]")]` | `/api/marcas/buscar-marcas` | Caso normal |
+| `[HttpGet("[action]/{id:long}")]` | `/api/marcas/obtener-marca-por-id/5` | La acción opera sobre un id |
+| `[HttpGet]` | `/api/salud` | La URL la consume una máquina y debe ser corta |
+
+El `id` va siempre restringido por tipo (`{id:long}`): un `/api/marcas/obtener-marca-por-id/abc`
+responde 404 por enrutamiento, sin llegar al controlador.
+
+### Por qué acción y no REST por recurso
+
+Es una decisión consciente y no es REST de manual. Un ERP acumula operaciones que no caben en
+cinco verbos: anular una venta, cerrar una caja, aprobar una solicitud, recalcular un costo.
+Forzarlas a `PUT /api/ventas/{id}` con un campo `estado` en el cuerpo hace que el permiso, la
+validación y la auditoría de cuatro operaciones distintas convivan en un mismo endpoint.
+
+Con una acción por caso de uso, cada operación tiene su ruta, su permiso, su validador y su
+manejador. El costo es que la URL no es canónicamente REST; a cambio, el mapa de rutas se lee
+como el mapa de casos de uso, que es exactamente lo que el equipo necesita consultar.
 
 ## Verbos y códigos
 
-| Operación | Verbo y ruta | Éxito | Errores esperados |
+| Operación | Verbo | Éxito | Errores esperados |
 |---|---|---|---|
-| Listar / buscar | `GET /api/recursos` | 200 | 400 |
-| Obtener uno | `GET /api/recursos/{id}` | 200 | 404 |
-| Crear | `POST /api/recursos` | 201 + `Location` | 400, 409 |
-| Reemplazar | `PUT /api/recursos/{id}` | 200 | 400, 404, 409 |
-| Cambiar estado | `PATCH /api/recursos/{id}/accion` | 200 | 404, 409 |
-| Acción de negocio | `POST /api/recursos` | 201 | 400, 404 |
+| Listar / buscar | `GET` | 200 | 400 |
+| Obtener uno | `GET` | 200 | 404 |
+| Crear | `POST` | 201 + `Location` si hay lectura por id | 400, 409 |
+| Actualizar | `PUT` | 200 | 400, 404, 409 |
+| Cambiar estado | `PATCH` | 200 | 404, 409 |
+| Acción de negocio | `POST` | 201 | 400, 404 |
 
 **No se usa `DELETE`.** El sistema hace baja lógica
 ([ADR-0007](decisiones/ADR-0007-baja-logica.md)), así que el verbo sería una mentira.
@@ -31,10 +78,8 @@ fallos no previstos.
 
 ## Paginación
 
-Toda lista paginada usa los mismos parámetros y la misma forma de respuesta:
-
 ```
-GET /api/ventas?pagina=1&tamanoPagina=25
+GET /api/ventas/buscar-ventas?pagina=1&tamanoPagina=25
 ```
 
 | Parámetro | Por defecto | Máximo |
@@ -43,7 +88,7 @@ GET /api/ventas?pagina=1&tamanoPagina=25
 | `tamanoPagina` | 25 | 200 |
 
 Valores fuera de rango se **normalizan**, no se rechazan: pedir `tamanoPagina=5000` devuelve
-200 páginas, no un 400. La normalización vive en `SolicitudPaginada.Normalizar`, un solo lugar,
+200 filas, no un 400. La normalización vive en `SolicitudPaginada.Normalizar`, un solo lugar,
 para que 31 módulos no inventen 31 defaults.
 
 ```json
@@ -61,37 +106,56 @@ para contar en memoria.
 
 ## Errores
 
-Una sola forma, siempre:
+Una sola forma, siempre, incluidos el 401 y el 403:
 
 ```json
 {
-  "codigo": "VENTA_004",
-  "mensaje": "Stock insuficiente para Insumo de ejemplo A: disponible 2, solicitado 5.",
-  "correlacionId": "8f3c1e94a2b04d7f",
-  "detalles": { "id": 1, "disponible": 2, "solicitado": 5 }
+  "traceId": "8f3c1e94a2b04d7f",
+  "code": "conflict",
+  "message": "Ya existe una marca con el mismo nombre para la empresa.",
+  "details": null,
+  "errorCode": "MARCA_003"
 }
 ```
 
-- `codigo` es para el programa; `mensaje` es para la persona. El mensaje puede reformularse sin
-  romper el contrato; el código no.
-- `correlacionId` viene también en la cabecera `X-Correlacion-Id`, y es la llave para encontrar
-  el request en los logs.
-- `detalles` nunca lleva trazas, SQL ni datos de otros usuarios.
+| Campo | Para qué |
+|---|---|
+| `traceId` | Llave para encontrar el request en los logs. Viaja también en la cabecera `X-Correlacion-Id` |
+| `code` | Familia del error: `validation_error`, `unauthorized`, `forbidden`, `bad_request`, `not_found`, `conflict`, `internal_error` |
+| `message` | Texto en español, apto para mostrar. Puede reformularse sin romper el contrato |
+| `details` | Datos estructurados. Nunca trazas, SQL ni datos de terceros |
+| `errorCode` | Código del catálogo. **Contrato duro: nunca viaja null** |
 
-Errores de validación de entrada: un objeto por campo dentro de `detalles`.
+`errorCode` nunca es null porque un cliente que recibe `null` no puede decidir nada y termina
+comparando el texto del mensaje —que sí cambia—. Cada factory de
+[`RespuestaError`](../ERP.Api/Contracts/Comun/RespuestaError.cs) aplica el fallback de su
+familia.
+
+**El 401 y el 403 también llevan el sobre.** El middleware de autenticación corta el request
+antes del manejador de errores, así que por defecto ASP.NET los devuelve con el cuerpo vacío;
+`EventosJwtVersionAutenticacion` los intercepta (`OnChallenge` / `OnForbidden`) para que el
+cliente no tenga que tratarlos como casos especiales.
+
+Errores de validación: un objeto por campo dentro de `details.errors`.
 
 ```json
 {
-  "codigo": "API_006",
-  "mensaje": "La solicitud contiene campos inválidos.",
-  "detalles": [
-    { "campo": "Nombre", "codigo": "MARCA_005", "mensaje": "El nombre debe tener al menos 2 caracteres." }
-  ]
+  "traceId": "aac2ed3645224c34",
+  "code": "validation_error",
+  "message": "La solicitud contiene campos inválidos.",
+  "details": {
+    "errors": [
+      { "campo": "Correo", "codigo": "AUTH_007", "mensaje": "El correo es obligatorio." },
+      { "campo": "Contrasena", "codigo": "AUTH_008", "mensaje": "La contraseña es obligatoria." }
+    ]
+  },
+  "errorCode": "API_006"
 }
 ```
 
-Se devuelven **todos** los campos inválidos de una vez, no el primero: obligar a corregir de a
-uno es una mala experiencia y multiplica los viajes.
+Se devuelven **todos los campos** inválidos de una vez, pero **un solo error por campo**
+(`CascadeMode.Stop`): un correo vacío reporta "es obligatorio" y no además "formato inválido",
+que sería ruido.
 
 ## Fechas
 

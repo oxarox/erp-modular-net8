@@ -8,7 +8,8 @@ Se copia al pull request y se marca.
 
 ## Contrato
 
-- [ ] Ruta en kebab-case, recurso en plural, verbo HTTP correcto
+- [ ] Ruta derivada con `[HttpX("[action]")]` — nunca literal — y verbo HTTP correcto
+- [ ] El nombre del método describe el caso de uso: es lo que va a quedar en la URL
 - [ ] `id` restringido por tipo en la ruta (`{id:long}`)
 - [ ] Contrato de entrada y salida propio en `ERP.Api/Contracts/` — **nunca** una entidad de dominio
 - [ ] Atributos `[ProducesResponseType]` para cada código que el endpoint puede devolver

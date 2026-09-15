@@ -1,5 +1,12 @@
 namespace ERP.Api.Contracts.Ventas
 {
+    public sealed record SolicitudBuscarVentas(
+        DateTime? Desde,
+        DateTime? Hasta,
+        string? Estado,
+        int? Pagina,
+        int? TamanoPagina);
+
     public sealed record SolicitudLineaVenta(long ProductoId, int Cantidad, decimal? DescuentoLinea);
 
     public sealed record SolicitudRegistrarVenta(

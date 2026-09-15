@@ -47,7 +47,7 @@ reglas están **forzadas por la estructura**. Ese es el tema de este repositorio
 
 ## Qué mirar primero
 
-Cinco archivos, en este orden, cuentan la historia completa:
+Seis archivos, en este orden, cuentan la historia completa:
 
 1. **[`ERP.Api/Program.cs`](ERP.Api/Program.cs)** — la composición del sistema. El orden del
    pipeline está comentado línea por línea, porque invertir dos de esas líneas es la forma más
@@ -62,7 +62,10 @@ Cinco archivos, en este orden, cuentan la historia completa:
 4. **[`ERP.Infraestructura/Contexto/ContextoErp.cs`](ERP.Infraestructura/Contexto/ContextoErp.cs)** —
    el aislamiento multiempresa como filtro global, no como disciplina de cada consulta. Su
    [prueba](ERP.Tests/Api/FiltroGlobalMultiempresaTests.cs) es la más importante del repositorio.
-5. **[`docs/decisiones/`](docs/decisiones/)** — ocho decisiones técnicas con su contexto, sus
+5. **[`ERP.Api/Convenciones/`](ERP.Api/Convenciones/)** — las rutas no se escriben a mano: se
+   derivan del nombre de la clase y del método. `ControladorMarcas.CrearMarca` queda como
+   `POST /api/marcas/crear-marca`, y ninguna ruta puede desalinearse del código.
+6. **[`docs/decisiones/`](docs/decisiones/)** — ocho decisiones técnicas con su contexto, sus
    alternativas descartadas y su costo asumido.
 
 ---
@@ -130,7 +133,7 @@ sequenceDiagram
     participant Dom as Dominio
     participant Rep as Repositorio
 
-    Cli->>Mid: POST /api/ventas + Bearer
+    Cli->>Mid: POST /api/ventas/registrar-venta + Bearer
     Mid->>Mid: asigna id de correlación
     Mid->>Aut: valida firma, expiración y versión de credenciales
     Aut->>Aut: ¿claim "ventas.registrar"?
@@ -138,7 +141,7 @@ sequenceDiagram
     Aut->>Val: entra a la acción
     Val-->>Cli: 400 con un error por campo si la forma es inválida
     Val->>Ctl: solicitud válida
-    Ctl->>Man: ManejarAsync(EmpresaId del token, comando)
+    Ctl->>Man: ManejarAsync(empresaId del token, comando)
     Man->>Rep: productos por lote (1 consulta)
     Man->>Dom: CalculadoraTotalesVenta.Calcular(...)
     Dom-->>Man: totales con sus invariantes
@@ -207,6 +210,7 @@ ERP.Modular.sln
 │  ├─ Autorizacion/            #   filtros, intermediarios y autorización por permisos
 │  ├─ Contracts/               #   contratos de entrada y salida de la API
 │  ├─ Controladores/
+│  ├─ Convenciones/           #   rutas derivadas del nombre de la clase y del método
 │  ├─ Filtros/
 │  ├─ Intermediarios/
 │  └─ Validadores/

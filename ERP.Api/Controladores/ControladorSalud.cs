@@ -7,27 +7,22 @@ namespace ERP.Api.Controladores
 {
     /// <summary>
     /// Sonda de vida para el orquestador de contenedores y para el monitoreo.
-    /// Es el único endpoint anónimo además del login, y no revela nada del estado interno
-    /// más allá de que el proceso responde.
+    /// <para>
+    /// Es de los pocos endpoints sin token, y no revela nada del estado interno más allá de
+    /// que el proceso responde. Tampoco lleva <c>[action]</c> en la ruta: la sonda vive en
+    /// <c>/api/salud</c>, porque la URL la configura un orquestador y conviene que sea corta.
+    /// </para>
     /// </summary>
     [AllowAnonymous]
-    [Route("api/salud")]
     public sealed class ControladorSalud : ControladorBase
     {
-        private readonly IHostEnvironment _entorno;
-
-        public ControladorSalud(IHostEnvironment entorno)
-        {
-            _entorno = entorno;
-        }
-
         [HttpGet]
         [ProducesResponseType(typeof(RespuestaSalud), StatusCodes.Status200OK)]
-        public ActionResult<RespuestaSalud> Obtener()
+        public ActionResult<RespuestaSalud> Obtener([FromServices] IHostEnvironment entorno)
         {
             string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "desconocida";
 
-            return Ok(new RespuestaSalud("ok", version, _entorno.EnvironmentName, DateTime.UtcNow));
+            return Ok(new RespuestaSalud("ok", version, entorno.EnvironmentName, DateTime.UtcNow));
         }
     }
 }
