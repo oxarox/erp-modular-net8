@@ -34,9 +34,13 @@ namespace ERP.Tests.Ventas
         {
             _usuario.ObtenerUsuarioIdActual().Returns(ConstructorDeDatos.UsuarioId);
 
+            // El doble ejecuta el delegado tal cual: lo que se prueba es la orquestación
+            // del caso de uso, no que EF Core sepa abrir una transacción.
             _unidadDeTrabajo
-                .IniciarTransaccionAsync(Arg.Any<CancellationToken>())
-                .Returns(Substitute.For<IAsyncDisposable>());
+                .EjecutarEnTransaccionAsync(
+                    Arg.Any<Func<CancellationToken, Task<ResultadoRegistrarVenta>>>(),
+                    Arg.Any<CancellationToken>())
+                .Returns(ci => ci.ArgAt<Func<CancellationToken, Task<ResultadoRegistrarVenta>>>(0)(CancellationToken.None));
 
             _repositorioVenta
                 .SiguienteNumeroAsync(Arg.Any<long>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
@@ -86,8 +90,10 @@ namespace ERP.Tests.Ventas
                     && m.OrigenId == 42L),
                 Arg.Any<CancellationToken>());
 
-            await _unidadDeTrabajo.Received(1).ConfirmarAsync(Arg.Any<CancellationToken>());
-            await _unidadDeTrabajo.DidNotReceive().RevertirAsync(Arg.Any<CancellationToken>());
+            // La escritura ocurrió dentro de la unidad de trabajo, no suelta.
+            await _unidadDeTrabajo.Received(1).EjecutarEnTransaccionAsync(
+                Arg.Any<Func<CancellationToken, Task<ResultadoRegistrarVenta>>>(),
+                Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -105,7 +111,9 @@ namespace ERP.Tests.Ventas
             excepcion.CodigoError.Should().Be(CodigosErrorVentas.StockInsuficiente);
 
             // Nada se escribió: la validación ocurre antes de abrir la transacción.
-            await _unidadDeTrabajo.DidNotReceive().IniciarTransaccionAsync(Arg.Any<CancellationToken>());
+            await _unidadDeTrabajo.DidNotReceive().EjecutarEnTransaccionAsync(
+                Arg.Any<Func<CancellationToken, Task<ResultadoRegistrarVenta>>>(),
+                Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -167,7 +175,7 @@ namespace ERP.Tests.Ventas
         }
 
         [Fact]
-        public async Task ManejarAsync_FalloAlEscribir_RevierteLaTransaccion()
+        public async Task ManejarAsync_FalloAlEscribir_SeTraduceAErrorInternoConSuCodigo()
         {
             ConfigurarProductos(ConstructorDeDatos.Producto(id: 1L));
             ConfigurarStock(disponible: 10m);
@@ -181,10 +189,10 @@ namespace ERP.Tests.Ventas
                 ComandoCon(new LineaComandoVenta(1L, 1, null)),
                 CancellationToken.None);
 
-            await accion.Should().ThrowAsync<ExcepcionInternaAplicacion>();
-
-            await _unidadDeTrabajo.Received(1).RevertirAsync(Arg.Any<CancellationToken>());
-            await _unidadDeTrabajo.DidNotReceive().ConfirmarAsync(Arg.Any<CancellationToken>());
+            // El fallo técnico no escapa crudo: se traduce al código del catálogo. La
+            // reversión es responsabilidad de la unidad de trabajo, no del caso de uso.
+            ExcepcionInternaAplicacion excepcion = (await accion.Should().ThrowAsync<ExcepcionInternaAplicacion>()).Which;
+            excepcion.CodigoError.Should().Be(CodigosErrorVentas.RegistroFallido);
         }
 
         private static ComandoRegistrarVenta ComandoCon(params LineaComandoVenta[] lineas) =>

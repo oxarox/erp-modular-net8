@@ -66,6 +66,19 @@ Lee una proyección, en SQL, y devuelve exactamente las columnas que necesita.
 | `ServiciosDominio/` | Implementaciones de contratos que **define el dominio** pero que necesitan persistencia: `ServicioStockProducto`. |
 | `InyeccionDependencias/` | El único archivo que conoce abstracciones e implementaciones a la vez. |
 
+#### Transacciones y reintentos
+
+`IUnidadDeTrabajo` recibe la operación como **delegado**
+(`EjecutarEnTransaccionAsync(async ct => { ... })`) y no como un par abrir/confirmar. No es
+gusto: la conexión declara `EnableRetryOnFailure` para sobrevivir a caídas transitorias de red
+y a los failover del servidor, y EF Core **rechaza en tiempo de ejecución** la combinación de
+esa estrategia con una transacción abierta a mano —al reintentar tendría que repetir la unidad
+completa, no la última sentencia—.
+
+Con la forma de delegado, la operación se ejecuta *dentro* de la estrategia y un reintento
+repite todo el bloque desde cero. Es un error que no aparece al compilar ni en las pruebas con
+dobles: solo se ve al escribir contra una base real, que es exactamente donde se descubrió.
+
 **Por qué `ServiciosDominio/` está separado de `Repositorios/`:** no es acceso a datos de una
 entidad, es una regla del negocio (el saldo es la proyección de los movimientos) que necesita
 la base de datos para ejecutarse. El dominio dicta la regla; la infraestructura elige cómo

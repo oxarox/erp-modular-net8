@@ -104,7 +104,7 @@ namespace ERP.Aplicacion.CasosDeUso.Ventas
                     if (disponible < linea.Cantidad)
                     {
                         throw new ExcepcionSolicitudInvalida(
-                            $"Stock insuficiente para {producto.Nombre}: disponible {disponible}, solicitado {linea.Cantidad}.",
+                            $"Stock insuficiente para {producto.Nombre}: disponible {disponible:0.##}, solicitado {linea.Cantidad}.",
                             CodigosErrorVentas.StockInsuficiente,
                             new { producto.Id, Disponible = disponible, Solicitado = linea.Cantidad });
                     }
@@ -158,68 +158,79 @@ namespace ERP.Aplicacion.CasosDeUso.Ventas
                 });
             }
 
-            await using IAsyncDisposable transaccion = await _unidadDeTrabajo.IniciarTransaccionAsync(ct);
+            ResultadoRegistrarVenta resultado;
 
             try
             {
-                Venta registrada = await _repositorioVenta.RegistrarAsync(empresaId, venta, ct);
-
-                foreach (VentaDetalleLinea detalle in registrada.Detalles)
-                {
-                    Producto producto = porId[detalle.ProductoId];
-
-                    if (!producto.ControlaInventario)
+                // Todo lo que sigue es atómico. La reversión la garantiza la unidad de trabajo:
+                // el caso de uso decide QUÉ es indivisible, no cómo se implementa.
+                resultado = await _unidadDeTrabajo.EjecutarEnTransaccionAsync(
+                    async cancelacion =>
                     {
-                        continue;
-                    }
+                        Venta registrada = await _repositorioVenta.RegistrarAsync(empresaId, venta, cancelacion);
 
-                    MovimientoInventario movimiento = new()
-                    {
-                        EmpresaId = empresaId,
-                        ProductoId = detalle.ProductoId,
-                        AlmacenId = comando.AlmacenId,
-                        Tipo = TipoMovimientoInventario.Egreso,
-                        Cantidad = detalle.Cantidad,
-                        CostoUnitario = producto.CostoPromedio,
-                        FechaUtc = ahora,
-                        OrigenTipo = nameof(Venta),
-                        OrigenId = registrada.Id,
-                        UsuarioId = venta.UsuarioId,
-                    };
+                        // Se guarda aquí, dentro de la transacción, porque los movimientos de
+                        // inventario necesitan el folio real de la venta para apuntar a ella.
+                        // Sin este guardado intermedio, OrigenId quedaría en cero y el rastro
+                        // entre el movimiento y el documento que lo originó se perdería.
+                        await _unidadDeTrabajo.GuardarCambiosAsync(cancelacion);
 
-                    PoliticaInmutabilidadMovimientoInventario.AsegurarQuePuedeRegistrarse(movimiento);
-                    await _stock.AplicarMovimientoAsync(movimiento, ct);
-                }
+                        foreach (VentaDetalleLinea detalle in registrada.Detalles)
+                        {
+                            Producto producto = porId[detalle.ProductoId];
 
-                await _unidadDeTrabajo.GuardarCambiosAsync(ct);
-                await _unidadDeTrabajo.ConfirmarAsync(ct);
+                            if (!producto.ControlaInventario)
+                            {
+                                continue;
+                            }
 
-                await _bitacora.RegistrarAsync("Ventas", "Registrar", nameof(Venta), registrada.Id, ct: ct);
+                            MovimientoInventario movimiento = new()
+                            {
+                                EmpresaId = empresaId,
+                                ProductoId = detalle.ProductoId,
+                                AlmacenId = comando.AlmacenId,
+                                Tipo = TipoMovimientoInventario.Egreso,
+                                Cantidad = detalle.Cantidad,
+                                CostoUnitario = producto.CostoPromedio,
+                                FechaUtc = ahora,
+                                OrigenTipo = nameof(Venta),
+                                OrigenId = registrada.Id,
+                                UsuarioId = venta.UsuarioId,
+                            };
 
-                return new ResultadoRegistrarVenta(
-                    true,
-                    "Venta registrada.",
-                    registrada.Id,
-                    registrada.Numero,
-                    totales.Subtotal,
-                    totales.Descuento,
-                    totales.Impuesto,
-                    totales.Total);
+                            PoliticaInmutabilidadMovimientoInventario.AsegurarQuePuedeRegistrarse(movimiento);
+                            await _stock.AplicarMovimientoAsync(movimiento, cancelacion);
+                        }
+
+                        return new ResultadoRegistrarVenta(
+                            true,
+                            "Venta registrada.",
+                            registrada.Id,
+                            registrada.Numero,
+                            totales.Subtotal,
+                            totales.Descuento,
+                            totales.Impuesto,
+                            totales.Total);
+                    },
+                    ct);
             }
             catch (ExcepcionAplicacion)
             {
-                await _unidadDeTrabajo.RevertirAsync(ct);
                 throw;
             }
             catch (Exception ex)
             {
-                await _unidadDeTrabajo.RevertirAsync(ct);
-
                 throw new ExcepcionInternaAplicacion(
                     "No se pudo registrar la venta.",
                     CodigosErrorVentas.RegistroFallido,
                     ex);
             }
+
+            // La bitácora queda FUERA de la transacción: un fallo al registrar el historial no
+            // debe deshacer una venta que el cliente ya pagó.
+            await _bitacora.RegistrarAsync("Ventas", "Registrar", nameof(Venta), resultado.Id, ct: ct);
+
+            return resultado;
         }
     }
 }

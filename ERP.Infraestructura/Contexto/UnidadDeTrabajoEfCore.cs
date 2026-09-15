@@ -1,62 +1,66 @@
 using ERP.Aplicacion.Abstracciones.Entidades;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace ERP.Infraestructura.Contexto
 {
     /// <summary>
-    /// Transacción explícita sobre el <see cref="ContextoErp"/>.
-    /// Si el proveedor no soporta transacciones (por ejemplo el proveedor en memoria de las pruebas),
-    /// degrada a una transacción nula en vez de fallar: el caso de uso no necesita saberlo.
+    /// Transacción sobre el <see cref="ContextoErp"/>, ejecutada dentro de la estrategia de
+    /// reintentos de EF Core.
+    /// <para>
+    /// El detalle que importa: la conexión declara <c>EnableRetryOnFailure</c> para sobrevivir a
+    /// caídas transitorias de red y a los failover del servidor. Esa estrategia y una
+    /// transacción abierta a mano son incompatibles —EF lanza
+    /// <c>InvalidOperationException</c>— porque al reintentar tendría que repetir la unidad
+    /// entera, no la última sentencia. Por eso la operación llega como delegado: se ejecuta
+    /// DENTRO de la estrategia, y un reintento repite todo el bloque desde cero.
+    /// </para>
+    /// <para>
+    /// Si el proveedor no soporta transacciones (el proveedor en memoria de las pruebas), la
+    /// operación se ejecuta igual, sin transacción. El caso de uso no necesita saberlo.
+    /// </para>
     /// </summary>
     public sealed class UnidadDeTrabajoEfCore : IUnidadDeTrabajo
     {
         private readonly ContextoErp _contexto;
-        private IDbContextTransaction? _transaccion;
 
         public UnidadDeTrabajoEfCore(ContextoErp contexto)
         {
             _contexto = contexto;
         }
 
-        public async Task<IAsyncDisposable> IniciarTransaccionAsync(CancellationToken ct)
+        public async Task<T> EjecutarEnTransaccionAsync<T>(Func<CancellationToken, Task<T>> operacion, CancellationToken ct)
         {
-            if (_contexto.Database.CurrentTransaction is not null)
-            {
-                return new TransaccionNula();
-            }
+            ArgumentNullException.ThrowIfNull(operacion);
 
-            try
-            {
-                _transaccion = await _contexto.Database.BeginTransactionAsync(ct);
-                return _transaccion;
-            }
-            catch (InvalidOperationException)
-            {
-                return new TransaccionNula();
-            }
-        }
+            IExecutionStrategy estrategia = _contexto.Database.CreateExecutionStrategy();
 
-        public async Task ConfirmarAsync(CancellationToken ct)
-        {
-            if (_transaccion is not null)
+            return await estrategia.ExecuteAsync(async () =>
             {
-                await _transaccion.CommitAsync(ct);
-            }
-        }
+                if (!_contexto.Database.IsRelational())
+                {
+                    return await operacion(ct);
+                }
 
-        public async Task RevertirAsync(CancellationToken ct)
-        {
-            if (_transaccion is not null)
-            {
-                await _transaccion.RollbackAsync(ct);
-            }
+                await using IDbContextTransaction transaccion = await _contexto.Database.BeginTransactionAsync(ct);
+
+                try
+                {
+                    T resultado = await operacion(ct);
+
+                    await _contexto.SaveChangesAsync(ct);
+                    await transaccion.CommitAsync(ct);
+
+                    return resultado;
+                }
+                catch
+                {
+                    await transaccion.RollbackAsync(ct);
+                    throw;
+                }
+            });
         }
 
         public Task<int> GuardarCambiosAsync(CancellationToken ct) => _contexto.SaveChangesAsync(ct);
-
-        private sealed class TransaccionNula : IAsyncDisposable
-        {
-            public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-        }
     }
 }
