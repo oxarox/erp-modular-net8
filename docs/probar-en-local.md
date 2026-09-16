@@ -263,7 +263,7 @@ curl -s -i http://localhost:5080/api/marcas/obtener-marca-por-id/3 -H "Authoriza
 dotnet test
 ```
 
-> 41 pruebas en aproximadamente un segundo, **sin base de datos y sin red**. Es la consecuencia
+> 42 pruebas en aproximadamente un segundo, **sin base de datos y sin red**. Es la consecuencia
 > directa de que el dominio no dependa de nada.
 
 ---

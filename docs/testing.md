@@ -4,7 +4,7 @@
 dotnet test
 ```
 
-41 pruebas, un segundo, sin base de datos y sin red. Eso no es casualidad: es la consecuencia
+42 pruebas, un segundo, sin base de datos y sin red. Eso no es casualidad: es la consecuencia
 directa de que el dominio no dependa de nada y de que la aplicación dependa solo de
 abstracciones ([ADR-0001](decisiones/ADR-0001-arquitectura-por-capas.md)).
 

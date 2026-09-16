@@ -197,7 +197,7 @@ inyectan en un contenedor. La sintaxis cambia según la shell: ver
 dotnet test
 ```
 
-Las 41 pruebas corren sin base de datos y sin red.
+Las 42 pruebas corren sin base de datos y sin red.
 
 ### Guía de humo completa
 
