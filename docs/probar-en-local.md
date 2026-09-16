@@ -257,10 +257,31 @@ curl -s -i http://localhost:5080/api/marcas/obtener-marca-por-id/3 -H "Authoriza
 > `404`, no `403`. Responder 403 confirmaría que el recurso existe, que es justo lo que no se
 > quiere filtrar. Ver [`multiempresa.md`](multiempresa.md).
 
-## 8. Las pruebas automatizadas
+## 8. Lo mismo, pero por la consola web
+
+Todo lo anterior se recorre también desde [`erp-web/`](../erp-web/README.md), que consume estos
+mismos endpoints:
 
 ```bash
-dotnet test
+cd erp-web
+npm install
+npm run dev
+```
+
+> <http://localhost:5173>, que es el origen que la API autoriza por CORS. Entre con
+> `admin@norte.cl` / `Demo.1234`, cree una marca, registre una venta y vuelva a consultar el
+> catálogo: el stock bajó. Después salga, entre con `admin@sur.cl` y verá el aislamiento
+> multiempresa desde el otro lado —las marcas de Norte no existen para Sur—.
+
+Para recorrerla **sin levantar la API ni SQL Server**, `npm run dev:demo`: un Service Worker
+responde los endpoints dentro del navegador, validando el token, aplicando los permisos y
+filtrando por empresa igual que el servidor.
+
+## 9. Las pruebas automatizadas
+
+```bash
+dotnet test                    # la API
+cd erp-web && npm run test     # la consola
 ```
 
 > 42 pruebas en aproximadamente un segundo, **sin base de datos y sin red**. Es la consecuencia

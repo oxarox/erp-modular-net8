@@ -1,5 +1,6 @@
-# Entorno local completo: base de datos + API.
+# Entorno local completo: base de datos + API + consola web.
 #   docker compose up --build
+#   Consola: http://localhost:5173
 #   API:     http://localhost:8080/api/salud
 #   Swagger: http://localhost:8080/swagger  (solo con ASPNETCORE_ENVIRONMENT=Development)
 #
@@ -33,6 +34,23 @@ services:
       Cors__OrigenesPermitidos__0: "http://localhost:5173"
     ports:
       - "8080:8080"
+
+  consola:
+    build:
+      context: ./erp-web
+      args:
+        # Vite incrusta esta URL en el bundle durante la COMPILACIÓN, no en el
+        # arranque. Es el puerto que este archivo publica para la API vista desde
+        # el navegador del anfitrión: quien hace la petición es el navegador, no
+        # el contenedor, así que "http://api:8080" no serviría.
+        VITE_API_URL: "http://localhost:8080"
+    depends_on:
+      - api
+    ports:
+      # Se mantiene el 5173 de Vite aunque aquí sirva nginx: es el origen que la
+      # API ya autoriza en Cors__OrigenesPermitidos, y cambiarlo obligaría a
+      # tocar las dos puntas.
+      - "5173:80"
 
 volumes:
   datos-sql:

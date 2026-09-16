@@ -1,0 +1,48 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "react",
+    "typescript",
+    "oxc",
+    "unicorn"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/jsx-key": "error",
+    "react/no-danger": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-imports": "error",
+    "eqeqeq": [
+      "error",
+      "smart"
+    ],
+    "no-console": [
+      "warn",
+      {
+        "allow": [
+          "warn",
+          "error"
+        ]
+      }
+    ],
+    "react/only-export-components": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/jsx-no-target-blank": "error",
+    "react/no-unstable-nested-components": [
+      "warn",
+      {
+        "allowAsProps": true
+      }
+    ]
+  },
+  "ignorePatterns": [
+    "dist",
+    "node_modules",
+    "public/mockServiceWorker.js"
+  ]
+}

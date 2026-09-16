@@ -1,0 +1,287 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Sistema de diseño del ERP.
+
+   Los tokens están en español y son SEMÁNTICOS, no literales: se llaman
+   `--color-superficie` y no `--color-blanco`, porque en modo oscuro la superficie
+   deja de ser blanca y un token literal obligaría a escribir `dark:` en cada
+   componente. Con este esquema, `bg-superficie` funciona en los dos temas y
+   ningún componente conoce la paleta.
+
+   El tema se cambia agregando o quitando la clase `.dark` en <html>; el script
+   de index.html la aplica antes del primer pintado para que no haya destello.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Paleta base ────────────────────────────────────────────────────────────
+   El verde de marca es el mismo con el que el README del backend pinta la capa
+   de dominio en sus diagramas: la consola y la documentación se ven como una
+   sola pieza. */
+:root {
+  --marca-50: oklch(0.979 0.021 166);
+  --marca-100: oklch(0.95 0.052 163);
+  --marca-200: oklch(0.905 0.093 164);
+  --marca-300: oklch(0.845 0.143 164);
+  --marca-400: oklch(0.765 0.159 163);
+  --marca-500: oklch(0.696 0.149 162);
+  --marca-600: oklch(0.596 0.129 163);
+  --marca-700: oklch(0.508 0.109 163);
+  --marca-800: oklch(0.432 0.089 164);
+  --marca-900: oklch(0.378 0.074 166);
+  --marca-950: oklch(0.262 0.051 173);
+
+  --gris-50: oklch(0.984 0.003 248);
+  --gris-100: oklch(0.968 0.007 248);
+  --gris-200: oklch(0.929 0.013 256);
+  --gris-300: oklch(0.869 0.02 253);
+  --gris-400: oklch(0.704 0.04 257);
+  --gris-500: oklch(0.554 0.046 257);
+  --gris-600: oklch(0.446 0.043 257);
+  --gris-700: oklch(0.372 0.044 257);
+  --gris-800: oklch(0.279 0.041 260);
+  --gris-900: oklch(0.208 0.042 266);
+  --gris-950: oklch(0.155 0.036 266);
+}
+
+/* ── Tokens semánticos: tema claro ───────────────────────────────────────── */
+:root {
+  --fondo: var(--gris-100);
+  --superficie: oklch(1 0 0);
+  --superficie-hundida: var(--gris-50);
+  --superficie-elevada: oklch(1 0 0);
+
+  --borde: var(--gris-200);
+  --borde-fuerte: var(--gris-300);
+
+  --texto: var(--gris-900);
+  --texto-suave: var(--gris-600);
+  --texto-tenue: var(--gris-500);
+  --texto-invertido: oklch(1 0 0);
+
+  --marca: var(--marca-700);
+  --marca-hover: var(--marca-800);
+  --marca-suave: var(--marca-50);
+  --marca-borde: var(--marca-200);
+  --marca-texto: var(--marca-800);
+
+  --exito: oklch(0.55 0.13 155);
+  --exito-suave: oklch(0.96 0.03 155);
+  --exito-borde: oklch(0.88 0.07 155);
+
+  --alerta: oklch(0.58 0.13 75);
+  --alerta-suave: oklch(0.97 0.04 85);
+  --alerta-borde: oklch(0.88 0.09 85);
+
+  --peligro: oklch(0.53 0.2 27);
+  --peligro-suave: oklch(0.96 0.03 25);
+  --peligro-borde: oklch(0.88 0.07 25);
+
+  --info: oklch(0.53 0.15 255);
+  --info-suave: oklch(0.96 0.03 255);
+  --info-borde: oklch(0.88 0.06 255);
+
+  --anillo: var(--marca-600);
+  --sombra-color: 220 40% 20%;
+}
+
+/* ── Tokens semánticos: tema oscuro ──────────────────────────────────────── */
+.dark {
+  --fondo: var(--gris-950);
+  --superficie: var(--gris-900);
+  --superficie-hundida: oklch(0.182 0.039 266);
+  --superficie-elevada: var(--gris-800);
+
+  --borde: oklch(0.3 0.04 262);
+  --borde-fuerte: oklch(0.38 0.045 260);
+
+  --texto: var(--gris-100);
+  --texto-suave: var(--gris-400);
+  --texto-tenue: var(--gris-500);
+  --texto-invertido: var(--gris-950);
+
+  --marca: var(--marca-500);
+  --marca-hover: var(--marca-400);
+  --marca-suave: oklch(0.28 0.055 168);
+  --marca-borde: oklch(0.4 0.08 166);
+  --marca-texto: var(--marca-300);
+
+  --exito: oklch(0.72 0.15 155);
+  --exito-suave: oklch(0.27 0.05 155);
+  --exito-borde: oklch(0.38 0.08 155);
+
+  --alerta: oklch(0.79 0.14 80);
+  --alerta-suave: oklch(0.29 0.05 80);
+  --alerta-borde: oklch(0.4 0.08 80);
+
+  --peligro: oklch(0.7 0.17 25);
+  --peligro-suave: oklch(0.28 0.07 25);
+  --peligro-borde: oklch(0.4 0.11 25);
+
+  --info: oklch(0.72 0.13 255);
+  --info-suave: oklch(0.28 0.06 258);
+  --info-borde: oklch(0.4 0.09 258);
+
+  --anillo: var(--marca-400);
+  --sombra-color: 220 60% 2%;
+}
+
+/* ── Exposición a Tailwind ───────────────────────────────────────────────────
+   `@theme inline` publica cada token como utilidad (`bg-superficie`,
+   `text-texto-suave`, `border-borde`) resolviendo la variable en el punto de
+   uso, que es lo que permite que la misma clase cambie con el tema. */
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-superficie-hundida: var(--superficie-hundida);
+  --color-superficie-elevada: var(--superficie-elevada);
+
+  --color-borde: var(--borde);
+  --color-borde-fuerte: var(--borde-fuerte);
+
+  --color-texto: var(--texto);
+  --color-texto-suave: var(--texto-suave);
+  --color-texto-tenue: var(--texto-tenue);
+  --color-texto-invertido: var(--texto-invertido);
+
+  --color-marca: var(--marca);
+  --color-marca-hover: var(--marca-hover);
+  --color-marca-suave: var(--marca-suave);
+  --color-marca-borde: var(--marca-borde);
+  --color-marca-texto: var(--marca-texto);
+
+  --color-exito: var(--exito);
+  --color-exito-suave: var(--exito-suave);
+  --color-exito-borde: var(--exito-borde);
+
+  --color-alerta: var(--alerta);
+  --color-alerta-suave: var(--alerta-suave);
+  --color-alerta-borde: var(--alerta-borde);
+
+  --color-peligro: var(--peligro);
+  --color-peligro-suave: var(--peligro-suave);
+  --color-peligro-borde: var(--peligro-borde);
+
+  --color-info: var(--info);
+  --color-info-suave: var(--info-suave);
+  --color-info-borde: var(--info-borde);
+
+  --color-anillo: var(--anillo);
+
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --radius-borde: 0.625rem;
+
+  --shadow-tarjeta: 0 1px 2px 0 oklch(0 0 0 / 0.04), 0 1px 3px 0 oklch(0 0 0 / 0.06);
+  --shadow-elevada: 0 10px 30px -12px oklch(0 0 0 / 0.25), 0 4px 10px -6px oklch(0 0 0 / 0.12);
+
+  --animate-entrar: entrar 0.18s ease-out;
+  --animate-subir: subir 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pulso-suave: pulso-suave 1.6s ease-in-out infinite;
+}
+
+@keyframes entrar {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulso-suave {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    border-color: var(--borde);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background-color: var(--fondo);
+    color: var(--texto);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Un ERP es una pantalla llena de números en columna: sin cifras de ancho fijo
+     los montos bailan al filtrar y la columna deja de leerse de un vistazo. */
+  table,
+  .cifra {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Foco visible SIEMPRE que llegue por teclado, nunca al hacer clic con el mouse. */
+  :focus-visible {
+    outline: 2px solid var(--anillo);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  ::selection {
+    background-color: var(--marca-suave);
+    color: var(--marca-texto);
+  }
+
+  /* Respeta a quien pidió menos movimiento en el sistema operativo. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Visible solo para lectores de pantalla: encabezados de tabla, etiquetas de
+     iconos y saltos de navegación que no deben ocupar espacio. */
+  .solo-lectores {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .desplazamiento-fino {
+    scrollbar-width: thin;
+    scrollbar-color: var(--borde-fuerte) transparent;
+  }
+}

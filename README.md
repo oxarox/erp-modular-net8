@@ -14,8 +14,9 @@ repositorio está pensado para recorrerse en quince minutos. Empieza por
 ## Qué es esto
 
 Una API REST multiempresa sobre **.NET 8**, organizada en cuatro capas con dependencias
-dirigidas hacia el dominio, más un proyecto de pruebas. Clona, `docker compose up`, y tienes
-la API corriendo con base de datos, datos de ejemplo y Swagger.
+dirigidas hacia el dominio, más un proyecto de pruebas y **una consola web en React** que la
+consume. Clona, `docker compose up`, y tienes base de datos, API con datos de ejemplo,
+Swagger y la consola funcionando.
 
 | | |
 |---|---|
@@ -23,7 +24,8 @@ la API corriendo con base de datos, datos de ejemplo y Swagger.
 | **Persistencia** | SQL Server + EF Core 8, migraciones SQL versionadas |
 | **Seguridad** | JWT (acceso + refresco con rotación), RBAC por permisos `modulo.accion`, BCrypt |
 | **Validación** | FluentValidation, con códigos de error de catálogo |
-| **Pruebas** | xUnit + NSubstitute + FluentAssertions |
+| **Front** | React 19 + TypeScript + Vite, TanStack Query, React Router, Tailwind v4 |
+| **Pruebas** | xUnit + NSubstitute + FluentAssertions · Vitest + Testing Library |
 | **Entrega** | Dockerfile multietapa, docker compose, GitHub Actions |
 | **Documentación** | Swagger/OpenAPI + [`docs/`](docs/README.md), con ADR por decisión |
 
@@ -160,6 +162,7 @@ sequenceDiagram
 docker compose up --build
 ```
 
+- Consola: <http://localhost:5173>
 - API: <http://localhost:8080/api/salud>
 - Swagger: <http://localhost:8080/swagger>
 
@@ -191,13 +194,25 @@ Los secretos también pueden llegar por variable de entorno —`Jwt__ClaveFirma`
 inyectan en un contenedor. La sintaxis cambia según la shell: ver
 [`docs/probar-en-local.md`](docs/probar-en-local.md).
 
+### Solo la consola web
+
+```bash
+cd erp-web
+npm install
+npm run dev
+```
+
+Queda en <http://localhost:5173>, que es el origen que la API ya autoriza por CORS. Necesita
+la API corriendo — salvo en modo demo, ver abajo.
+
 ### Pruebas
 
 ```bash
-dotnet test
+dotnet test                    # 42 pruebas de la API
+cd erp-web && npm run test     # pruebas de la consola
 ```
 
-Las 42 pruebas corren sin base de datos y sin red.
+Las 42 pruebas del backend corren sin base de datos y sin red.
 
 ### Guía de humo completa
 
@@ -214,6 +229,28 @@ aislamiento multiempresa iniciando sesión con una y pidiendo datos de la otra:
 |---|---|---|
 | `admin@norte.cl` | `Demo.1234` | Comercial Norte |
 | `admin@sur.cl` | `Demo.1234` | Distribuidora Sur |
+
+---
+
+## La consola web
+
+[`erp-web/`](erp-web/README.md) es un cliente React que consume esta API. No es una maqueta:
+usa los endpoints reales, reacciona a los códigos del catálogo de errores y decide qué mostrar
+con los permisos que vienen firmados dentro del token.
+
+Cubre inicio de sesión con renovación automática, un tablero con la serie diaria de ventas, el
+CRUD de marcas con su baja lógica, el catálogo de productos con stock por almacén, el listado
+de ventas y el registro de una venta con previsualización de totales. Una pantalla de sistema
+muestra el estado de la API, los permisos del token y el sobre de error funcionando de verdad.
+
+**Modo demo.** Con `npm run dev:demo`, un Service Worker responde los endpoints dentro del
+navegador con datos equivalentes a la semilla —validando el token, aplicando los permisos y
+filtrando por empresa—, así que la consola se puede recorrer sin levantar la API ni SQL Server.
+Es lo que permite publicarla como enlace desde un portafolio.
+
+Las decisiones del front —dónde vive cada token, por qué la renovación está deduplicada, por
+qué el cálculo de totales se duplica a propósito y qué prueba lo mantiene honesto— están en
+[`erp-web/README.md`](erp-web/README.md).
 
 ---
 
@@ -247,8 +284,16 @@ ERP.Modular.sln
 │  ├─ Servicios/
 │  └─ ServiciosDominio/
 ├─ ERP.Tests/                  # xUnit, un directorio por módulo
+├─ erp-web/                    # Consola web (React + TypeScript + Vite)
+│  └─ src/
+│     ├─ app/                  #   armazón, rutas, guardas y cliente de consultas
+│     ├─ caracteristicas/      #   una carpeta por pantalla: marcas, ventas, tablero…
+│     ├─ componentes/          #   sistema de diseño propio
+│     ├─ nucleo/               #   contratos de la API, cliente HTTP, sesión, formato
+│     ├─ simulacion/           #   modo demo: los endpoints servidos por MSW
+│     └─ estilos/              #   tokens de color y tema claro/oscuro
 ├─ docs/                       # Arquitectura, ADR, convenciones, base de datos
-├─ .github/workflows/          # CI y despliegue
+├─ .github/workflows/          # CI, despliegue y publicación de la demo
 └─ pipelines/                  # Migraciones de base de datos
 ```
 
@@ -268,6 +313,7 @@ Cada una está documentada con su contexto, las alternativas descartadas y el co
 | [0006](docs/decisiones/ADR-0006-migraciones-sql-versionadas.md) | Migraciones SQL versionadas, no automáticas | Escribir el SQL a mano |
 | [0007](docs/decisiones/ADR-0007-baja-logica.md) | Baja lógica en todo el sistema | Toda consulta debe filtrar por `Activo` |
 | [0008](docs/decisiones/ADR-0008-inventario-por-movimientos.md) | El stock es la proyección de los movimientos | Dos escrituras por operación |
+| [0009](docs/decisiones/ADR-0009-listas-de-selector-sin-paginar.md) | Las listas de cardinalidad acotada no se paginan | Dos formas de respuesta para listas |
 
 ---
 
@@ -285,6 +331,7 @@ trabajo:
 - [Estrategia de pruebas](docs/testing.md)
 - [Estrategia de ramas](docs/branching-strategy.md)
 - [Mapa de módulos del sistema completo](docs/mapa-de-modulos.md)
+- [Decisiones de la consola web](erp-web/README.md)
 
 ---
 
@@ -299,8 +346,9 @@ Para que quede explícito qué es y qué no es:
 - Multiempresa: filtro global de consulta y contexto resuelto desde el token
 - Módulo de catálogo (Marcas): CRUD completo con baja lógica — la plantilla de los módulos simples
 - Módulo de ventas: registro transaccional con cálculo de totales y descuento de inventario
-- Catálogo de solo lectura (Productos y Almacenes): lo que la operación necesita para armar una venta
+- Catálogo de solo lectura (Productos y Almacenes): lo que la consola necesita para armar una venta
 - Transversales: manejo único de errores, correlación de requests, bitácora de acciones, paginación estándar
+- Consola web en React sobre los doce endpoints, con modo demo que no necesita backend
 
 **Documentado, no implementado**
 
