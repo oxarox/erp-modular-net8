@@ -65,7 +65,7 @@ Seis archivos, en este orden, cuentan la historia completa:
 5. **[`ERP.Api/Convenciones/`](ERP.Api/Convenciones/)** — las rutas no se escriben a mano: se
    derivan del nombre de la clase y del método. `ControladorMarcas.CrearMarca` queda como
    `POST /api/marcas/crear-marca`, y ninguna ruta puede desalinearse del código.
-6. **[`docs/decisiones/`](docs/decisiones/)** — ocho decisiones técnicas con su contexto, sus
+6. **[`docs/decisiones/`](docs/decisiones/)** — nueve decisiones técnicas con su contexto, sus
    alternativas descartadas y su costo asumido.
 
 ---
@@ -169,9 +169,9 @@ Después, aplica el esquema y los datos de ejemplo:
 docker compose exec -T base-de-datos /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'ClaveLocal_Dev123' -C -Q "CREATE DATABASE ErpModular"
 ```
 
-y luego los dos scripts de
+y luego los tres scripts de
 [`ERP.Infraestructura/Persistencia/Migraciones/`](ERP.Infraestructura/Persistencia/Migraciones/)
-en orden.
+en orden alfabético, que con la convención de nombres es el orden cronológico.
 
 ### Con el SDK de .NET
 
@@ -197,7 +197,7 @@ inyectan en un contenedor. La sintaxis cambia según la shell: ver
 dotnet test
 ```
 
-Las 32 pruebas corren sin base de datos y sin red.
+Las 41 pruebas corren sin base de datos y sin red.
 
 ### Guía de humo completa
 
@@ -299,6 +299,7 @@ Para que quede explícito qué es y qué no es:
 - Multiempresa: filtro global de consulta y contexto resuelto desde el token
 - Módulo de catálogo (Marcas): CRUD completo con baja lógica — la plantilla de los módulos simples
 - Módulo de ventas: registro transaccional con cálculo de totales y descuento de inventario
+- Catálogo de solo lectura (Productos y Almacenes): lo que la operación necesita para armar una venta
 - Transversales: manejo único de errores, correlación de requests, bitácora de acciones, paginación estándar
 
 **Documentado, no implementado**

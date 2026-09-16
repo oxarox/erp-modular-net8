@@ -36,6 +36,48 @@ propios, además de los transversales (`API_001`, `API_002`, `API_004`).
 | `pagina` | entero | 1 |
 | `tamanoPagina` | entero | 25 (máx. 200) |
 
+## Productos — `ControladorProductos`
+
+| Verbo | Ruta | Permiso | Caso de uso | Errores |
+|---|---|---|---|---|
+| GET | `/api/productos/buscar-productos` | `productos.ver` | `ManejadorBuscarProductos` | `ALMA_001` |
+
+**Parámetros de consulta de `buscar-productos`**
+
+| Parámetro | Tipo | Por defecto |
+|---|---|---|
+| `criterio` | texto | — |
+| `soloActivos` | booleano | — |
+| `almacenId` | entero | — |
+| `pagina` | entero | 1 |
+| `tamanoPagina` | entero | 25 (máx. 200) |
+
+El `criterio` busca a la vez por SKU y por nombre. `StockDisponible` viaja con saldo solo si se
+indica `almacenId` **y** el producto controla inventario; en cualquier otro caso es nulo, que no
+es lo mismo que cero.
+
+El `almacenId` se comprueba antes de consultar: si no es de la empresa del token —o no existe, o
+es cero— la respuesta es 404 con `ALMA_001`, no un catálogo con todo en cero. El front suele
+recordar la bodega elegida entre sesiones, así que este es el error que le dice que su selección
+dejó de servir.
+
+## Almacenes — `ControladorAlmacenes`
+
+| Verbo | Ruta | Permiso | Caso de uso | Errores |
+|---|---|---|---|---|
+| GET | `/api/almacenes/listar-almacenes` | `almacenes.ver` | `ManejadorListarAlmacenes` | — |
+
+**Parámetros de consulta de `listar-almacenes`**
+
+| Parámetro | Tipo | Por defecto |
+|---|---|---|
+| `soloActivos` | booleano | — |
+
+Es la única lista del sistema que **no** devuelve `RespuestaPaginada`: son pocas unidades por
+empresa y quien la consume es un selector, que necesita el listado completo para poder
+mostrarse. Devuelve el arreglo directo, con el almacén predeterminado primero. La excepción y su
+límite están en [ADR-0009](decisiones/ADR-0009-listas-de-selector-sin-paginar.md).
+
 ## Ventas — `ControladorVentas`
 
 | Verbo | Ruta | Permiso | Caso de uso | Errores |
@@ -65,7 +107,7 @@ conviene que sea corta y estable.
 
 ## Sobre el alcance
 
-Este repositorio implementa 10 endpoints, suficientes para mostrar los dos patrones que se
+Este repositorio implementa 12 endpoints, suficientes para mostrar los dos patrones que se
 repiten en todos los demás: el CRUD de catálogo (Marcas) y la operación transaccional
 (Ventas).
 

@@ -41,6 +41,21 @@ namespace ERP.Tests.Comun
                 Activo = activo,
             };
 
+        public static Almacen Almacen(
+            long id = AlmacenId,
+            string nombre = "Bodega central",
+            bool esPredeterminado = true,
+            bool activo = true) =>
+            new()
+            {
+                Id = id,
+                EmpresaId = EmpresaId,
+                Nombre = nombre,
+                Ubicacion = null,
+                EsPredeterminado = esPredeterminado,
+                Activo = activo,
+            };
+
         public static Usuario Usuario(string hashContrasena, bool activo = true) =>
             new()
             {
