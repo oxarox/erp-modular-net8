@@ -50,9 +50,42 @@ jobs:
           name: resultados-pruebas
           path: ./resultados
 
+  consola-web:
+    name: Compilar y probar la consola web
+    runs-on: ubuntu-latest
+
+    # Es un job aparte y no un paso del anterior: el front no depende del backend
+    # para compilar, así que romper uno no debe ocultar el estado del otro.
+    defaults:
+      run:
+        working-directory: erp-web
+
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: erp-web/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Revisar estilo
+        run: npm run lint
+
+      - name: Verificar tipos y compilar
+        run: npm run build
+
+      - name: Ejecutar pruebas
+        run: npm run test
+
   imagen-docker:
     name: Construir imagen
-    needs: compilar-y-probar
+    needs: [compilar-y-probar, consola-web]
     runs-on: ubuntu-latest
 
     steps:

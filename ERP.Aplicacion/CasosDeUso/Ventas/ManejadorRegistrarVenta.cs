@@ -27,6 +27,7 @@ namespace ERP.Aplicacion.CasosDeUso.Ventas
     {
         private readonly IRepositorioVenta _repositorioVenta;
         private readonly IRepositorioProducto _repositorioProducto;
+        private readonly IRepositorioAlmacen _repositorioAlmacen;
         private readonly IServicioStockProducto _stock;
         private readonly IUnidadDeTrabajo _unidadDeTrabajo;
         private readonly IProveedorContextoUsuario _usuario;
@@ -37,6 +38,7 @@ namespace ERP.Aplicacion.CasosDeUso.Ventas
         public ManejadorRegistrarVenta(
             IRepositorioVenta repositorioVenta,
             IRepositorioProducto repositorioProducto,
+            IRepositorioAlmacen repositorioAlmacen,
             IServicioStockProducto stock,
             IUnidadDeTrabajo unidadDeTrabajo,
             IProveedorContextoUsuario usuario,
@@ -46,6 +48,7 @@ namespace ERP.Aplicacion.CasosDeUso.Ventas
         {
             _repositorioVenta = repositorioVenta;
             _repositorioProducto = repositorioProducto;
+            _repositorioAlmacen = repositorioAlmacen;
             _stock = stock;
             _unidadDeTrabajo = unidadDeTrabajo;
             _usuario = usuario;
@@ -68,6 +71,19 @@ namespace ERP.Aplicacion.CasosDeUso.Ventas
                 throw new ExcepcionSolicitudInvalida(
                     $"El método de pago {comando.MetodoPago} no está habilitado.",
                     CodigosErrorVentas.MetodoPagoInvalido);
+            }
+
+            // El almacén llega en el cuerpo de la solicitud y el validador solo exige que sea
+            // positivo. Sin esta comprobación un identificador de OTRA empresa no encuentra
+            // existencias, el disponible sale en cero y la venta se rechaza con "stock
+            // insuficiente: disponible 0": una afirmación falsa sobre un almacén del que no se
+            // sabe nada, que además manda a revisar el inventario en vez de la solicitud.
+            // VENTA_008 ya figuraba en docs/endpoints.md como error posible de este endpoint.
+            if (!await _repositorioAlmacen.ExisteAsync(empresaId, comando.AlmacenId, ct))
+            {
+                throw new ExcepcionSolicitudInvalida(
+                    "Debe indicar un almacén válido.",
+                    CodigosErrorVentas.AlmacenNoEncontrado);
             }
 
             IReadOnlyList<long> idsProducto = comando.Lineas.Select(l => l.ProductoId).Distinct().ToList();

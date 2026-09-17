@@ -63,7 +63,7 @@ como el mapa de casos de uso, que es exactamente lo que el equipo necesita consu
 
 | Operación | Verbo | Éxito | Errores esperados |
 |---|---|---|---|
-| Listar / buscar | `GET` | 200 | 400 |
+| Listar / buscar | `GET` | 200 | 400; 404 si un filtro **nombra** un recurso inexistente o de otra empresa |
 | Obtener uno | `GET` | 200 | 404 |
 | Crear | `POST` | 201 + `Location` si hay lectura por id | 400, 409 |
 | Actualizar | `PUT` | 200 | 400, 404, 409 |
@@ -72,6 +72,11 @@ como el mapa de casos de uso, que es exactamente lo que el equipo necesita consu
 
 **No se usa `DELETE`.** El sistema hace baja lógica
 ([ADR-0007](decisiones/ADR-0007-baja-logica.md)), así que el verbo sería una mentira.
+
+**Un filtro que nombra un recurso se comprueba antes de consultar.** Un `?almacenId=` de otra
+empresa no devuelve filas, y una lista vacía —o peor, un saldo en cero— es una afirmación falsa
+sobre datos que el usuario sí va a leer. Se responde 404 con el código del módulo dueño del
+recurso, igual que si se hubiera pedido por id.
 
 Códigos transversales: 401 sin token válido, 403 con token pero sin permiso, **503 cuando la
 base de datos u otra dependencia no responde** y 500 solo para fallos no previstos del propio
@@ -105,6 +110,18 @@ para que 31 módulos no inventen 31 defaults.
 
 El conteo y el salto se hacen **en la base de datos**. Nunca se materializa la tabla completa
 para contar en memoria.
+
+### Cuándo una lista puede no paginarse
+
+Excepción acotada y escrita: [ADR-0009](decisiones/ADR-0009-listas-de-selector-sin-paginar.md).
+Una lista devuelve el arreglo directo solo si su cardinalidad está acotada **por diseño** —no
+porque hoy tenga pocas filas— y quien la consume es un selector, que necesita el listado
+completo para poder mostrarse. Hoy la única es
+`GET /api/almacenes/listar-almacenes`.
+
+Todo lo que crece con la operación se pagina, aunque hoy tenga diez filas: el criterio es cómo
+crece, no cuánto mide. En duda, se pagina. Y la lista que no se pagina lo dice en su fila de
+[`endpoints.md`](endpoints.md), que es donde el front lo consulta.
 
 ## Errores
 

@@ -28,6 +28,10 @@ docker compose exec -T base-de-datos /opt/mssql-tools18/bin/sqlcmd -S localhost 
 docker compose exec -T base-de-datos /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'ClaveLocal_Dev123' -C -d ErpModular -b -i /dev/stdin < ERP.Infraestructura/Persistencia/Migraciones/20260101_001_datos_semilla.sql
 ```
 
+```bash
+docker compose exec -T base-de-datos /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'ClaveLocal_Dev123' -C -d ErpModular -b -i /dev/stdin < ERP.Infraestructura/Persistencia/Migraciones/20260102_002_permisos_catalogo.sql
+```
+
 La API queda en `http://localhost:8080`. Salta al [paso 4](#4-iniciar-sesión).
 
 ## Opción B — con el SDK de .NET y SQL Server LocalDB
@@ -53,6 +57,10 @@ sqlcmd -S "(localdb)\MSSQLLocalDB" -d ErpModular -b -i ERP.Infraestructura/Persi
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d ErpModular -b -i ERP.Infraestructura/Persistencia/Migraciones/20260101_001_datos_semilla.sql
 ```
 
+```bash
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d ErpModular -b -i ERP.Infraestructura/Persistencia/Migraciones/20260102_002_permisos_catalogo.sql
+```
+
 Los scripts son idempotentes: volver a correrlos no duplica nada. Para comprobarlo, córrelos dos
 veces y verifica que los conteos no cambian.
 
@@ -60,7 +68,7 @@ veces y verifica que los conteos no cambian.
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d ErpModular -b -Q "SELECT (SELECT COUNT(*) FROM dbo.empresas) AS empresas, (SELECT COUNT(*) FROM dbo.productos) AS productos, (SELECT COUNT(*) FROM dbo.roles_permisos) AS permisos;"
 ```
 
-> `empresas = 2`, `productos = 3`, `permisos = 12`.
+> `empresas = 2`, `productos = 3`, `permisos = 16`.
 
 ### 2. Configurar los secretos locales
 
@@ -131,7 +139,7 @@ La semilla crea dos empresas para poder comprobar el aislamiento. Contraseña de
 curl -s -X POST http://localhost:5080/api/autenticacion/iniciar-sesion -H "Content-Type: application/json" -d '{"correo":"admin@norte.cl","contrasena":"Demo.1234"}'
 ```
 
-> Devuelve el par de tokens, la empresa y los seis permisos del rol administrador.
+> Devuelve el par de tokens, la empresa y los ocho permisos del rol administrador.
 
 Guarda el token de acceso en una variable:
 
@@ -249,13 +257,34 @@ curl -s -i http://localhost:5080/api/marcas/obtener-marca-por-id/3 -H "Authoriza
 > `404`, no `403`. Responder 403 confirmaría que el recurso existe, que es justo lo que no se
 > quiere filtrar. Ver [`multiempresa.md`](multiempresa.md).
 
-## 8. Las pruebas automatizadas
+## 8. Lo mismo, pero por la consola web
+
+Todo lo anterior se recorre también desde [`erp-web/`](../erp-web/README.md), que consume estos
+mismos endpoints:
 
 ```bash
-dotnet test
+cd erp-web
+npm install
+npm run dev
 ```
 
-> 32 pruebas en aproximadamente un segundo, **sin base de datos y sin red**. Es la consecuencia
+> <http://localhost:5173>, que es el origen que la API autoriza por CORS. Entre con
+> `admin@norte.cl` / `Demo.1234`, cree una marca, registre una venta y vuelva a consultar el
+> catálogo: el stock bajó. Después salga, entre con `admin@sur.cl` y verá el aislamiento
+> multiempresa desde el otro lado —las marcas de Norte no existen para Sur—.
+
+Para recorrerla **sin levantar la API ni SQL Server**, `npm run dev:demo`: un Service Worker
+responde los endpoints dentro del navegador, validando el token, aplicando los permisos y
+filtrando por empresa igual que el servidor.
+
+## 9. Las pruebas automatizadas
+
+```bash
+dotnet test                    # la API
+cd erp-web && npm run test     # la consola
+```
+
+> 42 pruebas en aproximadamente un segundo, **sin base de datos y sin red**. Es la consecuencia
 > directa de que el dominio no dependa de nada.
 
 ---

@@ -1,5 +1,7 @@
+using ERP.Aplicacion.CasosDeUso.Almacenes;
 using ERP.Aplicacion.CasosDeUso.Autenticacion;
 using ERP.Aplicacion.CasosDeUso.Marcas;
+using ERP.Aplicacion.CasosDeUso.Productos;
 using ERP.Aplicacion.CasosDeUso.Ventas;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,6 +23,12 @@ namespace ERP.Aplicacion.InyeccionDependencias
             servicios.AddScoped<ManejadorBuscarMarcas>();
             servicios.AddScoped<ManejadorObtenerMarca>();
             servicios.AddScoped<ManejadorDesactivarMarca>();
+
+            // Productos
+            servicios.AddScoped<ManejadorBuscarProductos>();
+
+            // Almacenes
+            servicios.AddScoped<ManejadorListarAlmacenes>();
 
             // Ventas
             servicios.AddScoped<ManejadorRegistrarVenta>();

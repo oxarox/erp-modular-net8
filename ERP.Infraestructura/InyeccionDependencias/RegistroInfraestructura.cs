@@ -66,12 +66,14 @@ namespace ERP.Infraestructura.InyeccionDependencias
             servicios.AddScoped<IUnidadDeTrabajo, UnidadDeTrabajoEfCore>();
             servicios.AddScoped<IRepositorioMarca, RepositorioMarcaEfCore>();
             servicios.AddScoped<IRepositorioProducto, RepositorioProductoEfCore>();
+            servicios.AddScoped<IRepositorioAlmacen, RepositorioAlmacenEfCore>();
             servicios.AddScoped<IRepositorioVenta, RepositorioVentaEfCore>();
             servicios.AddScoped<IRepositorioUsuario, RepositorioUsuarioEfCore>();
             servicios.AddScoped<IRepositorioSesionUsuario, RepositorioSesionUsuarioEfCore>();
 
             // Read models
             servicios.AddScoped<IConsultaVentasReporte, ConsultaVentasReporteEfCore>();
+            servicios.AddScoped<IConsultaCatalogoProductos, ConsultaCatalogoProductosEfCore>();
 
             // Servicios de dominio que necesitan persistencia
             servicios.AddScoped<IServicioStockProducto, ServicioStockProducto>();

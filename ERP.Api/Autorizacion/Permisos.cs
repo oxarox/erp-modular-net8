@@ -17,6 +17,16 @@ namespace ERP.Api.Autorizacion
             public const string Gestionar = "marcas.gestionar";
         }
 
+        public static class Productos
+        {
+            public const string Ver = "productos.ver";
+        }
+
+        public static class Almacenes
+        {
+            public const string Ver = "almacenes.ver";
+        }
+
         public static class Ventas
         {
             public const string Ver = "ventas.ver";
@@ -33,6 +43,8 @@ namespace ERP.Api.Autorizacion
         [
             Marcas.Ver,
             Marcas.Gestionar,
+            Productos.Ver,
+            Almacenes.Ver,
             Ventas.Ver,
             Ventas.Registrar,
             Ventas.Anular,

@@ -87,6 +87,17 @@ Decisión de fondo: [ADR-0004](decisiones/ADR-0004-codigos-de-error.md).
 | `PROD_007` | Categoría no encontrada | 404 |
 | `PROD_008` | Producto inactivo | 400 |
 
+## ALMA — almacenes
+
+| Código | Situación | HTTP |
+|---|---|---|
+| `ALMA_001` | Almacén no encontrado (inexistente o de otra empresa) | 404 |
+
+> `ALMA_001` cubre las dos situaciones a propósito, igual que `AUTH_001`: separarlas permitiría
+> enumerar qué almacenes existen en otras empresas. Lo devuelve `buscar-productos` cuando el
+> filtro `almacenId` no es de la empresa del token; sin él, la consulta no encontraría
+> existencias y el catálogo entero viajaría con saldo cero, que significa "no queda".
+
 ## VENTA — ventas
 
 | Código | Situación | HTTP |
@@ -98,7 +109,7 @@ Decisión de fondo: [ADR-0004](decisiones/ADR-0004-codigos-de-error.md).
 | `VENTA_005` | Cantidad inválida | 400 |
 | `VENTA_006` | Descuento inválido | 400 |
 | `VENTA_007` | Método de pago no habilitado | 400 |
-| `VENTA_008` | Almacén no encontrado | 404 |
+| `VENTA_008` | Almacén inexistente o de otra empresa | 400 |
 | `VENTA_009` | Cliente no encontrado | 404 |
 | `VENTA_010` | Venta no encontrada | 404 |
 | `VENTA_011` | La venta ya está anulada | 409 |
@@ -108,6 +119,6 @@ Decisión de fondo: [ADR-0004](decisiones/ADR-0004-codigos-de-error.md).
 
 Los módulos documentados en [`mapa-de-modulos.md`](mapa-de-modulos.md) tienen su prefijo
 reservado aunque todavía no estén implementados aquí, para que nadie lo ocupe con otro
-significado: `ALMA`, `AUDI`, `CAJA`, `CAT`, `CLI`, `COMP`, `DASH`, `DESC`, `EMP`, `INV`, `LOG`,
+significado: `AUDI`, `CAJA`, `CAT`, `CLI`, `COMP`, `DASH`, `DESC`, `EMP`, `INV`, `LOG`,
 `LOTE`, `LUG`, `MOD`, `MOV`, `ONB`, `PREF`, `PROM`, `PROV`, `RBAC`, `REP`, `SOL`, `SUSC`,
 `USR`.

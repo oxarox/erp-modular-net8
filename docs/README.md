@@ -22,6 +22,7 @@
 | [`BD/convenciones-bd.md`](BD/convenciones-bd.md) | Nombres de tablas, columnas, índices y tipos |
 | [`BD/migraciones.md`](BD/migraciones.md) | Cómo se escribe y se aplica una migración |
 | [`diagramas/`](diagramas/) | Diagramas de contexto, capas, modelo de datos y flujos |
+| [`../erp-web/README.md`](../erp-web/README.md) | La consola web: cómo se arranca y qué decidió el front |
 
 ## Reglas de la documentación
 
