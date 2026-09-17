@@ -5,7 +5,7 @@ import type { SVGProps } from 'react'
  *
  * Son trazos de 24×24 con `currentColor`, de modo que heredan el color del texto
  * y funcionan en los dos temas sin variantes. Se escriben a mano en lugar de
- * traer una librería de iconos porque la aplicación usa quince, y quince iconos
+ * traer una librería de iconos porque la aplicación usa un par de docenas, y
  * pesan menos que el árbol de dependencias de cualquier paquete que traiga mil.
  *
  * Todos son decorativos (`aria-hidden`): el significado lo aporta el texto que

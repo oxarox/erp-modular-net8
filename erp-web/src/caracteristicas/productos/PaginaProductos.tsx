@@ -439,15 +439,6 @@ function idDesdeUrl(valor: string): number | undefined {
 }
 
 /**
- * Almacén cuyo stock se muestra.
- *
- * El de la URL manda, pero solo si sigue existiendo: un enlace guardado el mes
- * pasado puede apuntar a un almacén dado de baja, y un `select` con un valor que
- * no está entre sus opciones se pinta en blanco. Cuando no hay elección válida
- * se usa el predeterminado de la empresa; si ninguno lo es —dato mal sembrado,
- * no una razón para dejar la columna vacía— se toma el primero.
- */
-/**
  * Decide con qué almacén se consulta el catálogo.
  *
  * El identificador solo se acepta si está **en la lista que devolvió el

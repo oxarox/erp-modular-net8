@@ -60,7 +60,12 @@ export const CODIGOS_MARCAS = {
  * `ALMA_001` lo devuelve también `buscar-productos` cuando el filtro `almacenId`
  * no es de la empresa del token. Importa que sea un 404 y no una lista con saldo
  * cero: «no queda» y «ese almacén no es tuyo» son afirmaciones distintas, y la
- * primera sería falsa. El front la trata limpiando el almacén recordado.
+ * primera sería falsa.
+ *
+ * La consola no debería provocarlo nunca: solo envía un almacén que esté en la
+ * lista que devolvió el servidor, así que un `?almacen=` inventado en la URL cae
+ * al predeterminado antes de salir. Si aun así llegara, lo recoge el manejador
+ * de errores de la pantalla como cualquier otro.
  */
 export const CODIGOS_ALMACENES = {
   noEncontrado: 'ALMA_001',

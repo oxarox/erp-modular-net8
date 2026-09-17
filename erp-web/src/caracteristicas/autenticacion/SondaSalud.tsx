@@ -76,7 +76,7 @@ export function SondaSalud({ className }: { className?: string }) {
       <Punto className="bg-exito" />
       <span>
         <span className="font-medium text-texto">
-          {/* En modo demo no hay API: las diez rutas las responde un Service Worker. */}
+          {/* En modo demo no hay API: las doce rutas las responde un Service Worker. */}
           {configuracion.modoDemo ? 'Simulador activo' : 'API disponible'}
         </span>{' '}
         · {salud.data.entorno} · v{salud.data.version}

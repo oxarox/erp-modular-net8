@@ -109,7 +109,7 @@ Decisión de fondo: [ADR-0004](decisiones/ADR-0004-codigos-de-error.md).
 | `VENTA_005` | Cantidad inválida | 400 |
 | `VENTA_006` | Descuento inválido | 400 |
 | `VENTA_007` | Método de pago no habilitado | 400 |
-| `VENTA_008` | Almacén no encontrado | 404 |
+| `VENTA_008` | Almacén inexistente o de otra empresa | 400 |
 | `VENTA_009` | Cliente no encontrado | 404 |
 | `VENTA_010` | Venta no encontrada | 404 |
 | `VENTA_011` | La venta ya está anulada | 409 |

@@ -19,7 +19,7 @@ import { formatearEntero } from '@/nucleo/formato/formato'
  */
 
 /**
- * Bajo este número la cifra se pinta en alerta.
+ * A este número o menos, la cifra se pinta en alerta.
  *
  * Es un umbral **de la interfaz**, no del dominio: el catálogo todavía no
  * expone punto de reorden por producto. El día que lo exponga, esta constante

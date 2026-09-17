@@ -38,7 +38,7 @@ export const configuracion = {
   urlApi: sinBarraFinal(import.meta.env['VITE_API_URL'] ?? 'http://localhost:5080'),
 
   /**
-   * Modo demo: los diez endpoints los responde un Service Worker (MSW) con datos
+   * Modo demo: los doce endpoints los responde un Service Worker (MSW) con datos
    * equivalentes a la semilla de desarrollo, sin API ni SQL Server detrás.
    * Es lo que permite publicar la consola y que alguien la recorra desde un enlace.
    */

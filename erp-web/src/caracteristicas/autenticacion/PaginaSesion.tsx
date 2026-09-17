@@ -18,6 +18,7 @@ import type {
 } from '@/caracteristicas/autenticacion/validacionSesion'
 import type { SolicitudIniciarSesion } from '@/nucleo/api/contratos'
 import { erroresPorCampo } from '@/nucleo/api/errores'
+import { configuracion } from '@/nucleo/configuracion'
 import { useSesion } from '@/nucleo/autenticacion/ProveedorSesion'
 import { useEnfoqueInicial } from '@/nucleo/hooks'
 import { useTema } from '@/nucleo/tema'
@@ -200,7 +201,13 @@ export default function PaginaSesion() {
             </Boton>
           </form>
 
-          <CredencialesDemo className="mt-8" alRellenar={rellenarCon} />
+          {/* Solo en la demo. Contra una API real esta tarjeta repartiría
+              credenciales de administrador que en un despliegue con la semilla
+              aplicada funcionan de verdad: la separación entre demo y servidor
+              tiene que estar también en el código, no solo en el README. */}
+          {configuracion.modoDemo && (
+            <CredencialesDemo className="mt-8" alRellenar={rellenarCon} />
+          )}
         </div>
       </main>
     </div>

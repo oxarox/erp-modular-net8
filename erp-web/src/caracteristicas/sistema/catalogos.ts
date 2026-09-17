@@ -152,7 +152,7 @@ export interface FamiliaCodigoError {
   situacion: string
 }
 
-/** Las seis familias con código asignado en `docs/codigos-error.md`. */
+/** Las siete familias con código asignado en `docs/codigos-error.md`. */
 export const FAMILIAS_CODIGO_ERROR: FamiliaCodigoError[] = [
   {
     prefijo: 'API_',
@@ -184,6 +184,13 @@ export const FAMILIAS_CODIGO_ERROR: FamiliaCodigoError[] = [
     ambito: 'Productos.',
     ejemplo: 'PROD_002',
     situacion: 'SKU duplicado en la empresa. Responde 409.',
+  },
+  {
+    prefijo: 'ALMA_',
+    ambito: 'Almacenes.',
+    ejemplo: 'ALMA_001',
+    situacion:
+      'El almacén no existe o es de otra empresa. Responde 404: distinguir los dos casos permitiría averiguar qué almacenes tienen las demás.',
   },
   {
     prefijo: 'VENTA_',

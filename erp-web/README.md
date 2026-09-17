@@ -82,7 +82,14 @@ Copie `.env.example` a `.env.local` y ajuste lo que necesite.
 | `VITE_MODO_DEMO` | `false` | Activa el simulador MSW |
 | `VITE_TASA_IMPUESTO` | `0.19` | Espejo de `Ventas:TasaImpuesto` del servidor |
 | `VITE_PRECIO_INCLUYE_IMPUESTO` | `false` | Espejo de `Ventas:PrecioIncluyeImpuesto` |
-| `VITE_BASE` | `/` | Subruta de publicación (GitHub Pages) |
+
+`VITE_BASE` es la excepción: la lee `vite.config.ts` como variable del **proceso**, no del
+archivo `.env`, porque Vite carga los `.env` después de evaluar la configuración. Va en la línea
+de comandos, y es lo que hace el workflow de la demo:
+
+```bash
+VITE_BASE=/erp-modular-net8/ npm run build:demo
+```
 
 ---
 

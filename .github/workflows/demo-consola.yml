@@ -60,6 +60,15 @@ jobs:
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
 
+      - name: Preparar el enrutado del lado del cliente
+        # Pages sirve archivos estáticos y no sabe nada de React Router: pedir
+        # /ventas/nueva directamente —recargar, o abrir un enlace compartido—
+        # busca un archivo que no existe. Pages devuelve 404.html cuando no
+        # encuentra la ruta, así que una copia del index deja que la aplicación
+        # arranque y resuelva la ruta por su cuenta. Es el equivalente estático
+        # del `try_files` que hace nginx.conf en la imagen Docker.
+        run: cp dist/index.html dist/404.html
+
       - name: Configurar Pages
         uses: actions/configure-pages@v5
 
