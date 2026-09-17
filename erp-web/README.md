@@ -4,6 +4,9 @@ Cliente React de la [API REST en .NET 8](../README.md) de este mismo repositorio
 maqueta: consume los endpoints reales, respeta el catálogo de códigos de error del servidor y
 usa los permisos que vienen firmados dentro del token para decidir qué mostrar.
 
+**▶ [Abrir la consola en vivo](https://oxarox.github.io/erp-modular-net8/)** — sin instalar
+nada, con `admin@norte.cl` / `Demo.1234`.
+
 | | |
 |---|---|
 | **Base** | React 19 + TypeScript 6 + Vite |

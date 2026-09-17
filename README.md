@@ -5,6 +5,16 @@
 > del cliente**: es la estructura, las convenciones y las decisiones técnicas, aplicadas a un
 > dominio genérico, con un módulo simple y un módulo complejo implementados de punta a punta.
 
+### ▶ [Abrir la consola en vivo](https://oxarox.github.io/erp-modular-net8/)
+
+Sin instalar nada. Entra con `admin@norte.cl` / `Demo.1234`, registra una venta y mira cómo
+baja el stock; después entra con `admin@sur.cl` y vas a ver el aislamiento multiempresa desde
+el otro lado —los datos de una empresa no existen en la sesión de la otra—.
+
+Los endpoints los responde un simulador dentro del navegador, con los contratos, los permisos y
+los códigos de error de esta misma API. El código que los consume es exactamente el que corre
+contra el servidor real.
+
 Si llegaste desde mi portafolio y quieres ver cómo construyo un sistema completo, este
 repositorio está pensado para recorrerse en quince minutos. Empieza por
 [**qué mirar primero**](#qué-mirar-primero).
@@ -246,7 +256,7 @@ muestra el estado de la API, los permisos del token y el sobre de error funciona
 **Modo demo.** Con `npm run dev:demo`, un Service Worker responde los endpoints dentro del
 navegador con datos equivalentes a la semilla —validando el token, aplicando los permisos y
 filtrando por empresa—, así que la consola se puede recorrer sin levantar la API ni SQL Server.
-Es lo que permite publicarla como enlace desde un portafolio.
+Es lo que hay detrás de la [consola en vivo](https://oxarox.github.io/erp-modular-net8/).
 
 Las decisiones del front —dónde vive cada token, por qué la renovación está deduplicada, por
 qué el cálculo de totales se duplica a propósito y qué prueba lo mantiene honesto— están en
