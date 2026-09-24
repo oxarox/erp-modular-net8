@@ -115,11 +115,11 @@ interface FilaProducto {
 const MARCAS_NORTE: FilaMarca[] = [
   { nombre: 'Genérica', descripcion: 'Marca por defecto del catálogo.' },
   { nombre: 'Acme', descripcion: 'Marca de ejemplo.' },
-  { nombre: 'Bosch', descripcion: 'Herramienta eléctrica profesional.' },
-  { nombre: '3M', descripcion: 'Abrasivos, cintas y elementos de protección.' },
-  { nombre: 'Stanley', descripcion: 'Herramienta manual y organización.' },
-  { nombre: 'Sika', descripcion: 'Adhesivos, selladores y morteros.' },
-  { nombre: 'Truper', descripcion: 'Ferretería general.' },
+  { nombre: 'Torvex', descripcion: 'Herramienta eléctrica profesional.' },
+  { nombre: 'Lijara', descripcion: 'Abrasivos, cintas y elementos de protección.' },
+  { nombre: 'Duramano', descripcion: 'Herramienta manual y organización.' },
+  { nombre: 'Adhemar', descripcion: 'Adhesivos, selladores y morteros.' },
+  { nombre: 'Tornal', descripcion: 'Ferretería general.' },
   { nombre: 'Lumisol', descripcion: 'Iluminación LED para interior y exterior.' },
   { nombre: 'Ferrex', descripcion: 'Línea importada de fijaciones.' },
   {
@@ -159,7 +159,7 @@ const PRODUCTOS_NORTE: FilaProducto[] = [
   {
     sku: 'SKU-0101',
     nombre: 'Guantes de nitrilo talla M (caja de 100)',
-    marca: '3M',
+    marca: 'Lijara',
     categoria: 'Seguridad',
     precioVenta: 8990,
     controlaInventario: true,
@@ -168,7 +168,7 @@ const PRODUCTOS_NORTE: FilaProducto[] = [
   {
     sku: 'SKU-0102',
     nombre: 'Mascarilla respiratoria P2',
-    marca: '3M',
+    marca: 'Lijara',
     categoria: 'Seguridad',
     precioVenta: 3490,
     controlaInventario: true,
@@ -185,7 +185,7 @@ const PRODUCTOS_NORTE: FilaProducto[] = [
   {
     sku: 'SKU-0201',
     nombre: 'Taladro percutor 650 W',
-    marca: 'Bosch',
+    marca: 'Torvex',
     categoria: 'Herramientas',
     precioVenta: 79990,
     controlaInventario: true,
@@ -195,7 +195,7 @@ const PRODUCTOS_NORTE: FilaProducto[] = [
   {
     sku: 'SKU-0202',
     nombre: 'Set de brocas HSS 19 piezas',
-    marca: 'Bosch',
+    marca: 'Torvex',
     categoria: 'Herramientas',
     precioVenta: 14990,
     controlaInventario: true,
@@ -204,7 +204,7 @@ const PRODUCTOS_NORTE: FilaProducto[] = [
   {
     sku: 'SKU-0203',
     nombre: 'Juego de destornilladores 6 piezas',
-    marca: 'Stanley',
+    marca: 'Duramano',
     categoria: 'Herramientas',
     precioVenta: 12990,
     controlaInventario: true,
@@ -212,7 +212,7 @@ const PRODUCTOS_NORTE: FilaProducto[] = [
   {
     sku: 'SKU-0301',
     nombre: 'Sellador de poliuretano 300 ml',
-    marca: 'Sika',
+    marca: 'Adhemar',
     categoria: 'Adhesivos',
     precioVenta: 6490,
     controlaInventario: true,
@@ -220,7 +220,7 @@ const PRODUCTOS_NORTE: FilaProducto[] = [
   {
     sku: 'SKU-0302',
     nombre: 'Adhesivo epóxico bicomponente 50 ml',
-    marca: 'Sika',
+    marca: 'Adhemar',
     categoria: 'Adhesivos',
     precioVenta: 9990,
     controlaInventario: true,
@@ -247,7 +247,7 @@ const PRODUCTOS_NORTE: FilaProducto[] = [
   {
     sku: 'SKU-0402',
     nombre: 'Escobillón industrial 60 cm',
-    marca: 'Truper',
+    marca: 'Tornal',
     categoria: 'Aseo',
     precioVenta: 5990,
     controlaInventario: true,

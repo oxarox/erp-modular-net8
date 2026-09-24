@@ -159,12 +159,12 @@ curl -s -X POST http://localhost:5080/api/autenticacion/iniciar-sesion -H "Conte
 ## 5. Un CRUD completo: marcas
 
 ```bash
-curl -s -X POST http://localhost:5080/api/marcas/crear-marca -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"nombre":"Bosch","descripcion":"Herramienta profesional","activo":true}'
+curl -s -X POST http://localhost:5080/api/marcas/crear-marca -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"nombre":"Torvex","descripcion":"Herramienta profesional","activo":true}'
 ```
 
 > `201` con `{"exitoso":true,"mensaje":"Marca creada.","id":3}`
 
-Repite el mismo comando cambiando el nombre a minúsculas (`bosch`): el duplicado se detecta sin
+Repite el mismo comando cambiando el nombre a minúsculas (`torvex`): el duplicado se detecta sin
 importar mayúsculas.
 
 > `409` con `errorCode: MARCA_003`
