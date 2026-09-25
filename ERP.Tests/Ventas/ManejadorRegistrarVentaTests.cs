@@ -23,6 +23,7 @@ namespace ERP.Tests.Ventas
     {
         private readonly IRepositorioVenta _repositorioVenta = Substitute.For<IRepositorioVenta>();
         private readonly IRepositorioProducto _repositorioProducto = Substitute.For<IRepositorioProducto>();
+        private readonly IRepositorioAlmacen _repositorioAlmacen = Substitute.For<IRepositorioAlmacen>();
         private readonly IServicioStockProducto _stock = Substitute.For<IServicioStockProducto>();
         private readonly IUnidadDeTrabajo _unidadDeTrabajo = Substitute.For<IUnidadDeTrabajo>();
         private readonly IProveedorContextoUsuario _usuario = Substitute.For<IProveedorContextoUsuario>();
@@ -57,9 +58,15 @@ namespace ERP.Tests.Ventas
 
             OpcionesVentas opciones = new() { TasaImpuesto = 0.19m, PrecioIncluyeImpuesto = false };
 
+            // Por defecto el almacén del escenario existe: cada prueba declara solo lo suyo.
+            _repositorioAlmacen
+                .ExisteAsync(Arg.Any<long>(), Arg.Any<long>(), Arg.Any<CancellationToken>())
+                .Returns(true);
+
             _manejador = new ManejadorRegistrarVenta(
                 _repositorioVenta,
                 _repositorioProducto,
+                _repositorioAlmacen,
                 _stock,
                 _unidadDeTrabajo,
                 _usuario,
@@ -113,6 +120,34 @@ namespace ERP.Tests.Ventas
             // Nada se escribió: la validación ocurre antes de abrir la transacción.
             await _unidadDeTrabajo.DidNotReceive().EjecutarEnTransaccionAsync(
                 Arg.Any<Func<CancellationToken, Task<ResultadoRegistrarVenta>>>(),
+                Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task ManejarAsync_AlmacenDeOtraEmpresa_DevuelveAlmacenNoEncontrado()
+        {
+            // Sin esta comprobación el almacén ajeno no tiene existencias, el disponible sale
+            // en cero y la venta se rechaza con "stock insuficiente": un mensaje falso que
+            // manda a revisar el inventario en vez de la solicitud. Además, consultar el
+            // stock de un almacén que no es de la empresa no debería ni intentarse.
+            _repositorioAlmacen
+                .ExisteAsync(ConstructorDeDatos.EmpresaId, ConstructorDeDatos.AlmacenId, Arg.Any<CancellationToken>())
+                .Returns(false);
+
+            ConfigurarProductos(ConstructorDeDatos.Producto(id: 1L));
+
+            Func<Task> accion = () => _manejador.ManejarAsync(
+                ConstructorDeDatos.EmpresaId,
+                ComandoCon(new LineaComandoVenta(1L, 1, null)),
+                CancellationToken.None);
+
+            ExcepcionSolicitudInvalida excepcion = (await accion.Should().ThrowAsync<ExcepcionSolicitudInvalida>()).Which;
+            excepcion.CodigoError.Should().Be(CodigosErrorVentas.AlmacenNoEncontrado);
+
+            await _stock.DidNotReceive().ObtenerDisponibleAsync(
+                Arg.Any<long>(),
+                Arg.Any<long>(),
+                Arg.Any<long>(),
                 Arg.Any<CancellationToken>());
         }
 

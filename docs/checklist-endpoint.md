@@ -14,6 +14,9 @@ Se copia al pull request y se marca.
 - [ ] Contrato de entrada y salida propio en `ERP.Api/Contracts/` — **nunca** una entidad de dominio
 - [ ] Atributos `[ProducesResponseType]` para cada código que el endpoint puede devolver
 - [ ] Si devuelve lista: usa `RespuestaPaginada<T>` con los parámetros estándar
+- [ ] Si devuelve lista **sin** paginar: cumple las tres condiciones de
+      [ADR-0009](decisiones/ADR-0009-listas-de-selector-sin-paginar.md) —cardinalidad acotada
+      por diseño, consumo como selector, y queda escrito en `endpoints.md`—. En duda, se pagina
 - [ ] Si crea: devuelve 201 con cabecera `Location`
 
 ## Seguridad

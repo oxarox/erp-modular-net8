@@ -81,8 +81,11 @@ asignado. Un permiso que existe en un atributo pero en ninguna fila de `roles_pe
 un 403 permanente que parece un bug de la aplicación y es un dato faltante.
 
 La semilla ([`20260101_001_datos_semilla.sql`](../ERP.Infraestructura/Persistencia/Migraciones/20260101_001_datos_semilla.sql))
-inserta el catálogo completo, y lleva un comentario recordando que debe coincidir con
-`Permisos.cs`.
+inserta el catálogo inicial, y lleva un comentario recordando que debe coincidir con
+`Permisos.cs`. Cada permiso agregado después llega con su propia migración —así lo hace
+[`20260102_002_permisos_catalogo.sql`](../ERP.Infraestructura/Persistencia/Migraciones/20260102_002_permisos_catalogo.sql)
+con `productos.ver` y `almacenes.ver`—, porque volver a editar la semilla no le agrega nada a
+una base que ya la aplicó.
 
 ## Secretos
 

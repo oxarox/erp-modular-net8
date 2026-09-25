@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="Cliente web del ERP Modular: consola multiempresa sobre la API REST en .NET 8."
+    />
+    <title>ERP Modular</title>
+    <script>
+      // Se aplica antes del primer pintado para que recargar en modo oscuro no
+      // produzca el destello blanco del tema por defecto.
+      (function () {
+        try {
+          var guardado = localStorage.getItem('erp.tema');
+          var oscuro =
+            guardado === 'oscuro' ||
+            (guardado === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.toggle('dark', oscuro);
+        } catch (_) {
+          /* localStorage bloqueado: se queda con el tema claro. */
+        }
+      })();
+    </script>
+  </head>
+  <body class="h-full">
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
